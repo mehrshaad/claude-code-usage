@@ -1,7 +1,7 @@
 {
-  "name": "claude-code-usage",
-  "displayName": "Claude Code Usage",
-  "description": "Live Claude Code usage in your status bar: 5-hour block meter, weekly rolling limit, per-model and per-session breakdown.",
+  "name": "claude-code-meter",
+  "displayName": "Claude Code Meter - Usage & Limits",
+  "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
   "version": "0.4.0",
   "publisher": "Mehrshad",
   "license": "MIT",
@@ -16,10 +16,26 @@
   "keywords": [
     "claude",
     "claude code",
+    "anthropic",
     "usage",
+    "token usage",
     "tokens",
+    "cost",
+    "rate limit",
+    "limits",
+    "quota",
+    "usage monitor",
+    "usage tracker",
+    "meter",
     "status bar",
-    "cost"
+    "ccusage",
+    "opus",
+    "sonnet",
+    "context",
+    "budget",
+    "spend",
+    "ai",
+    "llm"
   ],
   "repository": {
     "type": "git",
@@ -438,5 +454,7 @@
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "qna": "marketplace",
+  "badges": []
 }

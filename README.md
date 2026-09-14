@@ -1,6 +1,8 @@
-# Claude Code Usage
+# Claude Code Usage Meter
 
-Live Claude Code token usage in the VS Code status bar, with a full breakdown panel.
+Live Claude Code usage in the VS Code status bar — session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown.
+
+A usage monitor for Claude Code that shows how much of your Claude session limit and weekly limit you have burned, how many tokens and dollars each model and session has cost, and how fast you are burning through the current window. Works with Claude Pro, Max and API accounts.
 
 Reads the transcripts Claude Code already writes to `~/.claude/projects` and turns them into a meter you can glance at while you work. Nothing leaves your machine.
 
@@ -27,12 +29,12 @@ Width is fixed for every value — percentages reserve three digits and duration
 
 ## Install
 
-From the VS Code Marketplace: search **Claude Code Usage**.
+From the VS Code Marketplace: search **Claude Code Usage Meter**.
 
 From a `.vsix`:
 
 ```bash
-code --install-extension claude-code-usage-0.1.0.vsix
+code --install-extension claude-code-meter-0.4.0.vsix
 ```
 
 ## How the numbers are built
@@ -91,7 +93,7 @@ Costs use the published per-million-token API rates, including cache write and r
 | `claudeUsage.dashboard.accentColor` | `#D97757` | Accent colour for gauges |
 | `claudeUsage.notifications.thresholds` | `[75, 90]` | Percentages that raise a warning |
 
-Full list with descriptions: **Settings → Extensions → Claude Code Usage**.
+Full list with descriptions: **Settings → Extensions → Claude Code Usage Meter**.
 
 ## Commands
 
