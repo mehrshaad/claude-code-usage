@@ -9,14 +9,17 @@ Reads the transcripts Claude Code already writes to `~/.claude/projects` and tur
 **Status bar** — a chunk meter for the current session limit, percent used, and time until it resets:
 
 ```
-██████░░░░ 62% · 1h47m
+▰▰▰▰▰▰▱▱▱▱  62% · 1h47m
 ```
 
 The item turns amber at the warning threshold and red at the danger threshold. Click it to open the dashboard, or set it to cycle between block / week / today / session.
 
+Width is fixed for every value — percentages reserve three digits and durations are always `NhNNm` — so nothing in the status bar cluster shifts as the numbers tick. Six meter styles are available; `halfblocks` resolves to ~1.25% per cell if you want the fill to creep rather than step, and `ascii` renders anywhere.
+
 **Dashboard** — a side panel with:
 
-- session and weekly limit gauges, plus per-model weekly figures
+- session and weekly limit gauges, with a caret on the bar marking where the current burn rate lands by reset
+- per-model weekly figures when your account is connected
 - today, active session, burn rate (tokens/min) and total tiles
 - per-model table with tokens, cost and message counts
 - live session list, active sessions marked
@@ -64,7 +67,7 @@ Costs use the published per-million-token API rates, including cache write and r
 | `claudeUsage.weeklyMode` | `rolling7d` | Rolling 168 hours or calendar week |
 | `claudeUsage.weekStartsOn` | `monday` | First day of the calendar week |
 | `claudeUsage.statusBar.metric` | `block` | Primary metric: block / week / today / session |
-| `claudeUsage.statusBar.meterStyle` | `blocks` | `blocks`, `bars`, `dots`, `ascii`, `sparkline` |
+| `claudeUsage.statusBar.meterStyle` | `ticks` | `ticks`, `halfblocks`, `blocks`, `braille`, `ascii`, `sparkline` |
 | `claudeUsage.statusBar.meterWidth` | `10` | Number of meter segments |
 | `claudeUsage.statusBar.showTokens` | `false` | Show the raw token total in the status bar |
 | `claudeUsage.statusBar.showCost` | `false` | Show cost in the status bar |

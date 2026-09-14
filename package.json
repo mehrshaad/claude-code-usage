@@ -2,7 +2,7 @@
   "name": "claude-code-usage",
   "displayName": "Claude Code Usage",
   "description": "Live Claude Code usage in your status bar: 5-hour block meter, weekly rolling limit, per-model and per-session breakdown.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "mehrshaad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -223,19 +223,21 @@
         "claudeUsage.statusBar.meterStyle": {
           "type": "string",
           "enum": [
+            "ticks",
+            "halfblocks",
             "blocks",
-            "bars",
-            "dots",
+            "braille",
             "ascii",
             "sparkline"
           ],
-          "default": "blocks",
+          "default": "ticks",
           "enumDescriptions": [
-            "\u2588\u2588\u2588\u2591\u2591",
-            "\u258e\u258e\u258e\u2595\u2595",
-            "\u25cf\u25cf\u25cf\u25cb\u25cb",
-            "[###--]",
-            "Burn-rate sparkline"
+            "Spaced ticks \u2014 \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
+            "Half-step blocks \u2014 \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, creeps between whole segments",
+            "Solid blocks \u2014 \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, quantised to whole segments",
+            "Braille density \u2014 \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
+            "Bracketed ASCII \u2014 [======----], renders anywhere",
+            "Burn-rate sparkline instead of a fill"
           ],
           "description": "Meter glyph style."
         },
@@ -384,10 +386,10 @@
         },
         "claudeUsage.dashboard.maxSessions": {
           "type": "number",
-          "default": 8,
+          "default": 5,
           "minimum": 1,
           "maximum": 50,
-          "description": "Maximum sessions listed."
+          "description": "Maximum sessions listed (the panel fits 5 at 300px)."
         },
         "claudeUsage.dashboard.showModels": {
           "type": "boolean",

@@ -3,13 +3,18 @@ import type { Config } from './config';
 import type { Snapshot, Totals, Window } from './types';
 
 const METER_GLYPHS: Record<string, [string, string]> = {
+  ticks: ['▰', '▱'],
+  halfblocks: ['█', '░'],
   blocks: ['█', '░'],
-  bars: ['▮', '▯'],
-  dots: ['●', '○'],
+  braille: ['⣿', '⣀'],
   ascii: ['#', '-']
 };
 
+/** Partial cells for the half-step meter: one cell resolves to ~1.25%. */
+const PARTIAL = ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉'];
+const BRAILLE_PARTIAL = ['', '⣀', '⣤', '⣶'];
 const SPARK = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+export const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
 export function formatTokens(n: number): string {
   if (n >= 1_000_000_000) { return `${(n / 1_000_000_000).toFixed(2)}B`; }
@@ -18,12 +23,19 @@ export function formatTokens(n: number): string {
   return `${Math.round(n)}`;
 }
 
+/**
+ * Always NhNNm. A fixed shape is the point: the status bar item must not change
+ * width as the countdown loses a digit.
+ */
 export function formatDuration(ms: number): string {
-  if (ms <= 0) { return '0m'; }
-  const total = Math.floor(ms / 60_000);
+  const total = Math.max(0, Math.floor(ms / 60_000));
   const h = Math.floor(total / 60);
-  const m = total % 60;
-  return h > 0 ? `${h}h${String(m).padStart(2, '0')}m` : `${m}m`;
+  return `${h}h${String(total % 60).padStart(2, '0')}m`;
+}
+
+/** Percentages reserve three integer digits so the meter never shifts. */
+export function formatPercent(percent: number): string {
+  return `${String(Math.round(percent)).padStart(3, ' ')}%`;
 }
 
 export function meter(percent: number, width: number, style: string, series: number[]): string {
@@ -32,9 +44,22 @@ export function meter(percent: number, width: number, style: string, series: num
     const peak = Math.max(1, ...slice);
     return slice.map((v) => SPARK[Math.min(SPARK.length - 1, Math.round((v / peak) * (SPARK.length - 1)))]).join('');
   }
-  const [full, empty] = METER_GLYPHS[style] ?? METER_GLYPHS.blocks;
-  const filled = Math.max(0, Math.min(width, Math.round((percent / 100) * width)));
-  const body = full.repeat(filled) + empty.repeat(width - filled);
+
+  const [full, empty] = METER_GLYPHS[style] ?? METER_GLYPHS.ticks;
+  const exact = Math.max(0, Math.min(1, percent / 100)) * width;
+  const filled = Math.floor(exact);
+
+  // Half-step and braille meters spend their remainder on a partial cell, so the
+  // fill creeps between whole segments instead of jumping once per 1/width.
+  const steps = style === 'halfblocks' ? PARTIAL : style === 'braille' ? BRAILLE_PARTIAL : undefined;
+  let body: string;
+  if (steps && filled < width) {
+    const partial = steps[Math.min(steps.length - 1, Math.round((exact - filled) * steps.length))] ?? '';
+    body = full.repeat(filled) + partial + empty.repeat(width - filled - (partial ? 1 : 0));
+  } else {
+    const whole = Math.min(width, Math.round(exact));
+    body = full.repeat(whole) + empty.repeat(width - whole);
+  }
   return style === 'ascii' ? `[${body}]` : body;
 }
 
@@ -43,6 +68,8 @@ export class StatusBar {
   private snapshot: Snapshot | undefined;
   private cfg: Config;
   private metricOverride: Config['statusBar']['metric'] | undefined;
+  private spinner: NodeJS.Timeout | undefined;
+  private spinnerFrame = 0;
 
   constructor(cfg: Config) {
     this.cfg = cfg;
@@ -87,9 +114,19 @@ export class StatusBar {
   }
 
   setScanning(): void {
-    if (!this.item) { return; }
-    this.item.text = '$(sync~spin) Claude usage';
+    if (!this.item || this.spinner) { return; }
+    this.spinner = setInterval(() => {
+      this.spinnerFrame = (this.spinnerFrame + 1) % SPINNER.length;
+      if (this.item && !this.snapshot) {
+        this.item.text = `${SPINNER[this.spinnerFrame]} scanning transcripts…`;
+      }
+    }, 120);
+    this.item.text = `${SPINNER[0]} scanning transcripts…`;
     this.item.tooltip = 'Reading Claude Code transcripts…';
+  }
+
+  private stopSpinner(): void {
+    if (this.spinner) { clearInterval(this.spinner); this.spinner = undefined; }
   }
 
   render(): void {
@@ -99,20 +136,30 @@ export class StatusBar {
     if (!this.cfg.statusBar.enabled) { item.hide(); return; }
     item.show();
     if (!snap) { return; }
+    this.stopSpinner();
 
     const sb = this.cfg.statusBar;
     const view = this.view(snap);
+
+    if (snap.eventCount === 0 && !view.hasPercent) {
+      item.text = '▫ no usage data';
+      item.tooltip = 'No Claude Code activity found yet.';
+      item.backgroundColor = undefined;
+      item.color = undefined;
+      return;
+    }
+
     const parts: string[] = [];
     if (sb.showIcon) { parts.push('$(pulse)'); }
     if (sb.showMeter && view.hasPercent) {
       parts.push(meter(view.percent, sb.meterWidth, sb.meterStyle, snap.burnSeries));
     }
-    if (sb.showPercent && view.hasPercent) { parts.push(`${Math.round(view.percent)}%`); }
+    if (sb.showPercent && view.hasPercent) { parts.push(formatPercent(view.percent)); }
     if (sb.showTokens || !view.hasPercent) { parts.push(formatTokens(view.totals.counted)); }
     if (sb.showCost && snap.costEnabled) {
       parts.push(`${this.cfg.cost.currencySymbol}${view.totals.cost.toFixed(2)}`);
     }
-    if (sb.showReset && view.remainingMs > 0 && view.resets) {
+    if (sb.showReset && view.resets) {
       parts.push(`· ${formatDuration(view.remainingMs)}`);
     }
     item.text = parts.join(' ');
@@ -138,7 +185,7 @@ export class StatusBar {
   private view(snap: Snapshot): { totals: Totals; percent: number; limit: number; hasPercent: boolean; remainingMs: number; resets: boolean; label: string } {
     switch (this.metric) {
       case 'week':
-        return { ...window(snap.week), resets: this.cfg.weeklyMode === 'calendar', label: 'Week' };
+        return { ...window(snap.week), resets: snap.week.hasPercent || this.cfg.weeklyMode === 'calendar', label: 'Week' };
       case 'today':
         return { totals: snap.today, percent: 0, limit: 0, hasPercent: false, remainingMs: 0, resets: false, label: 'Today' };
       case 'session': {
@@ -161,7 +208,7 @@ export class StatusBar {
     md.isTrusted = true;
     const line = (label: string, w: Window) =>
       `**${label}** ` +
-      (w.hasPercent ? `${meter(w.percent, 10, 'blocks', snap.burnSeries)} ${Math.round(w.percent)}% · ` : '') +
+      (w.hasPercent ? `${meter(w.percent, 10, this.cfg.statusBar.meterStyle, snap.burnSeries)} ${Math.round(w.percent)}% · ` : '') +
       `${formatTokens(w.totals.counted)} tok` +
       (snap.costEnabled ? ` · ${cur}${w.totals.cost.toFixed(2)}` : '');
 
@@ -192,6 +239,7 @@ export class StatusBar {
   }
 
   dispose(): void {
+    this.stopSpinner();
     this.item?.dispose();
   }
 }
