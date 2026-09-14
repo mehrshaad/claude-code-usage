@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- Circle steps are now the default status bar meter. They shipped in 0.5.0 behind a setting, which meant nothing changed unless you went looking. `ticks` remains available as `claudeUsage.statusBar.meterStyle`
+
 ## 0.5.0
 
 Implements the updated design.

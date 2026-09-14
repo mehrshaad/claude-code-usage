@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -248,7 +248,7 @@
             "ascii",
             "sparkline"
           ],
-          "default": "ticks",
+          "default": "circles",
           "enumDescriptions": [
             "Spaced ticks - \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
             "Circle steps - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d4\u25cb\u25cb\u25cb, quarter-resolved cells (2.5% steps)",

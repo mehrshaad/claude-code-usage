@@ -11,14 +11,14 @@ Reads the transcripts Claude Code already writes to `~/.claude/projects` and tur
 **Status bar** — a chunk meter for the current session limit, percent used, and time until it resets:
 
 ```
-▰▰▰▰▰▰▱▱▱▱  62% · 1h47m
+●●●●●●◔○○○  62% · 1h47m
 ```
 
 The item turns amber at the warning threshold and red at the danger threshold. Click it to open the dashboard, or set it to cycle between block / week / today / session.
 
 Width is fixed for every value — percentages reserve three digits and durations are always `NhNNm` — so nothing in the status bar cluster shifts as the numbers tick.
 
-Eight meter styles are available. `circles` (`●●●●●●◔○○○`) resolves to 2.5% per cell — four times finer than the block meters — and the partial cell is the easiest to spot mid-glance; switch to `circleHalves` if the quadrant glyphs render at the wrong width in your editor font. `halfblocks` resolves to ~1.25% and creeps rather than steps, and `ascii` renders anywhere.
+Eight meter styles are available. The default, `circles` (`●●●●●●◔○○○`), resolves to 2.5% per cell — four times finer than the block meters — and the partial cell is the easiest to spot mid-glance; switch to `circleHalves` if the quadrant glyphs render at the wrong width in your editor font, or `ticks` (`▰▰▰▰▰▰▱▱▱▱`) for the plainest glyph set. `halfblocks` resolves to ~1.25% and creeps rather than steps, and `ascii` renders anywhere.
 
 **Dashboard** — a side panel with:
 
@@ -74,7 +74,7 @@ Costs use the published per-million-token API rates, including cache write and r
 | `claudeUsage.weeklyMode` | `rolling7d` | Rolling 168 hours or calendar week |
 | `claudeUsage.weekStartsOn` | `monday` | First day of the calendar week |
 | `claudeUsage.statusBar.metric` | `block` | Primary metric: block / week / today / session |
-| `claudeUsage.statusBar.meterStyle` | `ticks` | `ticks`, `circles`, `circleHalves`, `halfblocks`, `blocks`, `braille`, `ascii`, `sparkline` |
+| `claudeUsage.statusBar.meterStyle` | `circles` | `ticks`, `circles`, `circleHalves`, `halfblocks`, `blocks`, `braille`, `ascii`, `sparkline` |
 | `claudeUsage.dashboard.gaugeStyle` | `bar` | Session gauge shape: `bar` or `ring` |
 | `claudeUsage.statusBar.meterWidth` | `10` | Number of meter segments |
 | `claudeUsage.statusBar.showTokens` | `false` | Show the raw token total in the status bar |
