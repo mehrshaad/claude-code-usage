@@ -49,6 +49,7 @@ export interface Config {
     maxSessions: number;
     showModels: boolean;
     showHistory: boolean;
+    gaugeStyle: 'bar' | 'ring';
     accentColor: string;
   };
   notifications: { enabled: boolean; thresholds: number[] };
@@ -104,6 +105,7 @@ export function readConfig(): Config {
       maxSessions: g('dashboard.maxSessions', 8),
       showModels: g('dashboard.showModels', true),
       showHistory: g('dashboard.showHistory', true),
+      gaugeStyle: g('dashboard.gaugeStyle', 'bar'),
       accentColor: g('dashboard.accentColor', '#D97757')
     },
     notifications: {

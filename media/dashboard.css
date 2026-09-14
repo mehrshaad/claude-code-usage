@@ -57,6 +57,31 @@ section.rule { border-top: 1px solid var(--line); padding-top: 12px; }
 .fill.danger { background: var(--danger); }
 .track.week .fill { opacity: 0.7; }
 
+/* 1h - the same gauge as a ring: the window reads as a clock, so the projection
+   tick lands on a circumference the user can read as time. */
+.ring-wrap { display: flex; align-items: center; gap: 12px; }
+.ring { position: relative; width: 86px; height: 86px; flex: none; }
+.ring svg { display: block; }
+.ring .hero {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ring-track { fill: none; stroke: var(--track); stroke-width: 8; }
+.ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 8;
+  transition: stroke-dasharray 240ms linear;
+}
+.ring-fill.warn { stroke: var(--warn); }
+.ring-fill.danger { stroke: var(--danger); }
+.ring-tick { stroke: var(--fg); stroke-width: 1; opacity: 0.55; }
+.ring-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ring-meta .gauge-sub { margin-top: 0; display: block; }
+
 /* Where the current burn rate lands by reset - folded into the bar, not a tile. */
 .caret { position: absolute; top: -2px; bottom: -2px; width: 1px; background: var(--fg); opacity: 0.55; }
 

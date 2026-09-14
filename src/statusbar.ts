@@ -4,6 +4,8 @@ import type { Snapshot, Totals, Window } from './types';
 
 const METER_GLYPHS: Record<string, [string, string]> = {
   ticks: ['▰', '▱'],
+  circles: ['●', '○'],
+  circleHalves: ['●', '○'],
   halfblocks: ['█', '░'],
   blocks: ['█', '░'],
   braille: ['⣿', '⣀'],
@@ -13,6 +15,10 @@ const METER_GLYPHS: Record<string, [string, string]> = {
 /** Partial cells for the half-step meter: one cell resolves to ~1.25%. */
 const PARTIAL = ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉'];
 const BRAILLE_PARTIAL = ['', '⣀', '⣤', '⣶'];
+/** Quarter-resolved cells: 2.5% steps at ten segments. */
+const CIRCLE_PARTIAL = ['', '◔', '◑', '◕'];
+/** Fallback for fonts that do not carry the quadrant glyphs at monospace width. */
+const CIRCLE_HALF = ['', '◐', '●'];
 const SPARK = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 export const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
@@ -53,10 +59,18 @@ export function meter(percent: number, width: number, style: string, series: num
 
   // Half-step and braille meters spend their remainder on a partial cell, so the
   // fill creeps between whole segments instead of jumping once per 1/width.
-  const steps = style === 'halfblocks' ? PARTIAL : style === 'braille' ? BRAILLE_PARTIAL : undefined;
+  const steps =
+    style === 'halfblocks' ? PARTIAL :
+    style === 'braille' ? BRAILLE_PARTIAL :
+    style === 'circles' ? CIRCLE_PARTIAL :
+    style === 'circleHalves' ? CIRCLE_HALF :
+    undefined;
   let body: string;
   if (steps && filled < width) {
-    const partial = steps[Math.min(steps.length - 1, Math.round((exact - filled) * steps.length))] ?? '';
+    // Circle cells round a remainder up to the next quarter - any progress into a
+    // cell should be visible. Block and braille cells take the nearest step.
+    const toStep = style === 'circles' || style === 'circleHalves' ? Math.ceil : Math.round;
+    const partial = steps[Math.min(steps.length - 1, toStep((exact - filled) * steps.length))] ?? '';
     body = full.repeat(filled) + partial + empty.repeat(width - filled - (partial ? 1 : 0));
   } else {
     const whole = Math.min(width, Math.round(exact));

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+Implements the updated design.
+
+- New status bar treatment, circle steps: `●●●●●●◔○○○`. Quarter-resolved cells give 2.5% steps, four times the resolution of the block meters, and a remainder always rounds up so any progress into a cell is visible. `circleHalves` is the fallback for fonts that lack the quadrant glyphs at monospace width
+- The session gauge can be a ring (`claudeUsage.dashboard.gaugeStyle`): 86px, 8px stroke, hero percent inside, and the burn projection becomes a tick on the circumference, where its angle reads as a position in the window. The bar stays the default, so the session and week gauges share one shape
+- New icon: the open dial wrapped around the mascot — the ring reports 62%, the creature says whose tool it is
+
 ## 0.4.1
 
 Panel fixes found by rendering it against real data.

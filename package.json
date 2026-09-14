@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -240,6 +240,8 @@
           "type": "string",
           "enum": [
             "ticks",
+            "circles",
+            "circleHalves",
             "halfblocks",
             "blocks",
             "braille",
@@ -248,14 +250,16 @@
           ],
           "default": "ticks",
           "enumDescriptions": [
-            "Spaced ticks \u2014 \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
-            "Half-step blocks \u2014 \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, creeps between whole segments",
-            "Solid blocks \u2014 \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, quantised to whole segments",
-            "Braille density \u2014 \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
-            "Bracketed ASCII \u2014 [======----], renders anywhere",
+            "Spaced ticks - \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
+            "Circle steps - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d4\u25cb\u25cb\u25cb, quarter-resolved cells (2.5% steps)",
+            "Circle steps, halves only - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d0\u25cb\u25cb\u25cb, for fonts without the quadrant glyphs",
+            "Half-step blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, creeps between whole segments",
+            "Solid blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, quantised to whole segments",
+            "Braille density - \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
+            "Bracketed ASCII - [======----], renders anywhere",
             "Burn-rate sparkline instead of a fill"
           ],
-          "description": "Meter glyph style."
+          "markdownDescription": "Meter glyph style. `circles` resolves four times finer than the block meters; if the quadrant glyphs render at the wrong width in your editor font, use `circleHalves`."
         },
         "claudeUsage.statusBar.showPercent": {
           "type": "boolean",
@@ -437,6 +441,19 @@
             90
           ],
           "description": "Percentages that trigger a warning."
+        },
+        "claudeUsage.dashboard.gaugeStyle": {
+          "type": "string",
+          "enum": [
+            "bar",
+            "ring"
+          ],
+          "default": "bar",
+          "enumDescriptions": [
+            "Horizontal bar, shared shape with the week gauge",
+            "Circular ring, reads the window as a clock"
+          ],
+          "description": "Shape of the session gauge in the panel."
         }
       }
     }

@@ -57,7 +57,8 @@ export class DashboardView implements vscode.WebviewViewProvider {
         lookbackDays: this.cfg.lookbackDays,
         showModels: this.cfg.dashboard.showModels,
         showSessions: this.cfg.dashboard.showSessions,
-        showHistory: this.cfg.dashboard.showHistory
+        showHistory: this.cfg.dashboard.showHistory,
+        gaugeStyle: this.cfg.dashboard.gaugeStyle
       }
     });
   }

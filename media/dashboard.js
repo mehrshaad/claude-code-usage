@@ -25,6 +25,41 @@
   const shown = (w) => w.hasPercent && Number.isFinite(w.percent);
   const clamp = (p) => (Number.isFinite(p) ? Math.max(0, Math.min(100, p)) : 0);
 
+  // 1h - ring variant. Same data, same type sizes; the projection becomes a tick
+  // on the circumference, where its angle reads as a position in the window.
+  function ringGauge(s, state, cur) {
+    const w = s.block;
+    const has = shown(w);
+    const cls = level(w.percent, state);
+    const R = 39;
+    const C = 2 * Math.PI * R;
+    const arc = has ? (clamp(w.percent) / 100) * C : 0;
+    const caret = caretPercent(s);
+    let tick = '';
+    if (caret != null) {
+      const a = ((clamp(caret) / 100) * 360 - 90) * (Math.PI / 180);
+      const pt = (rad) => `${(43 + Math.cos(a) * rad).toFixed(2)} ${(43 + Math.sin(a) * rad).toFixed(2)}`;
+      tick = `<line class="ring-tick" x1="${pt(R - 6).split(' ')[0]}" y1="${pt(R - 6).split(' ')[1]}" x2="${pt(R + 6).split(' ')[0]}" y2="${pt(R + 6).split(' ')[1]}"></line>`;
+    }
+    return `<section>
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg viewBox="0 0 86 86" width="86" height="86" aria-hidden="true">
+            <circle class="ring-track" cx="43" cy="43" r="${R}"></circle>
+            ${has ? `<circle class="ring-fill ${cls}" cx="43" cy="43" r="${R}" stroke-dasharray="${arc.toFixed(2)} ${C.toFixed(2)}" transform="rotate(-90 43 43)"></circle>` : ''}
+            ${tick}
+          </svg>
+          <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+        </div>
+        <div class="ring-meta">
+          <span class="gauge-name">Session</span>
+          <span class="gauge-sub">${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span>
+          <span class="gauge-sub">${dur(w.remainingMs)} left</span>
+        </div>
+      </div>
+    </section>`;
+  }
+
   // 01 - block gauge. The caret marks where the current burn rate lands by reset;
   // past 100% the fill saturates and the caret sits behind it.
   function blockGauge(s, state, cur) {
@@ -166,7 +201,7 @@
     document.documentElement.style.setProperty('--accent', s.accentColor);
 
     root.innerHTML =
-      blockGauge(s, state, cur) +
+      (s.gaugeStyle === 'ring' ? ringGauge(s, state, cur) : blockGauge(s, state, cur)) +
       weekGauge(s, state, cur) +
       tiles(s, cur, money) +
       (s.showModels ? models(s, money) : '') +
