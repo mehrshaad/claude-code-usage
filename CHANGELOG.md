@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2
+
+- Fixed the release workflow: the publish step's condition read `env.VSCE_PAT`, which a step's own `env` block does not populate, so it skipped on every tag. The token now lives at job level
+- Release artifacts carry the extension's current name
+
 ## 0.5.1
 
 - Circle steps are now the default status bar meter. They shipped in 0.5.0 behind a setting, which meant nothing changed unless you went looking. `ticks` remains available as `claudeUsage.statusBar.meterStyle`

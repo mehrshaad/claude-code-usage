@@ -10,6 +10,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Job-level so the publish step's `if` can actually see it: a step's own
+    # env block is not in scope for its own condition.
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,18 +22,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npx vsce package --no-dependencies -o claude-code-usage-${{ github.ref_name }}.vsix
+      - run: npx vsce package --no-dependencies -o claude-code-meter-${{ github.ref_name }}.vsix
 
       - name: Attach the VSIX to the GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: claude-code-usage-${{ github.ref_name }}.vsix
+          files: claude-code-meter-${{ github.ref_name }}.vsix
           generate_release_notes: true
 
-      # Publishing is skipped automatically until VSCE_PAT is added to the
-      # repository secrets, so tagging works before a publisher account exists.
+      # Skips itself when no token is configured, so tagging still works.
       - name: Publish to the VS Code Marketplace
         if: ${{ env.VSCE_PAT != '' }}
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx vsce publish --no-dependencies --packagePath claude-code-usage-${{ github.ref_name }}.vsix
+        run: npx vsce publish --no-dependencies --packagePath claude-code-meter-${{ github.ref_name }}.vsix
