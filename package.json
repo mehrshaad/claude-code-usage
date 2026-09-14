@@ -1,0 +1,129 @@
+{
+  "name": "claude-code-usage",
+  "displayName": "Claude Code Usage",
+  "description": "Live Claude Code usage in your status bar: 5-hour block meter, weekly rolling limit, per-model and per-session breakdown.",
+  "version": "0.1.0",
+  "publisher": "mehrshaad",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other", "Visualization"],
+  "keywords": ["claude", "claude code", "usage", "tokens", "status bar", "cost"],
+  "repository": { "type": "git", "url": "https://github.com/mehrshaad/claude-code-usage.git" },
+  "bugs": { "url": "https://github.com/mehrshaad/claude-code-usage/issues" },
+  "homepage": "https://github.com/mehrshaad/claude-code-usage#readme",
+  "galleryBanner": { "color": "#1F1E1D", "theme": "dark" },
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeUsage",
+          "title": "Claude Usage",
+          "icon": "media/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "claudeUsage": [
+        { "id": "claudeUsage.dashboard", "name": "Usage", "type": "webview" }
+      ]
+    },
+    "commands": [
+      { "command": "claudeUsage.openDashboard", "title": "Open Dashboard", "category": "Claude Usage", "icon": "$(graph)" },
+      { "command": "claudeUsage.refresh", "title": "Refresh Now", "category": "Claude Usage", "icon": "$(refresh)" },
+      { "command": "claudeUsage.cycleMetric", "title": "Cycle Status Bar Metric", "category": "Claude Usage" },
+      { "command": "claudeUsage.setPlan", "title": "Set Plan", "category": "Claude Usage" },
+      { "command": "claudeUsage.toggleCost", "title": "Toggle Cost Display", "category": "Claude Usage" },
+      { "command": "claudeUsage.copyStats", "title": "Copy Stats to Clipboard", "category": "Claude Usage" },
+      { "command": "claudeUsage.resetCalibration", "title": "Reset Auto-Calibration", "category": "Claude Usage" },
+      { "command": "claudeUsage.rescan", "title": "Full Rescan (clear cache)", "category": "Claude Usage" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "claudeUsage.refresh", "when": "view == claudeUsage.dashboard", "group": "navigation@1" }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Code Usage",
+      "properties": {
+        "claudeUsage.plan": {
+          "type": "string",
+          "enum": ["pro", "max5", "max20", "team", "api", "custom"],
+          "enumDescriptions": [
+            "Claude Pro",
+            "Claude Max 5x",
+            "Claude Max 20x",
+            "Team / Enterprise seat",
+            "API pay-as-you-go (no block limit)",
+            "Custom - use the explicit token limits below"
+          ],
+          "default": "max20",
+          "markdownDescription": "Subscription plan. Sets the default denominators for the 5-hour block and weekly meters. Limits are estimates; enable `#claudeUsage.autoCalibrate#` to refine them from your own history."
+        },
+        "claudeUsage.blockTokenLimit": { "type": "number", "default": 0, "markdownDescription": "Tokens per 5-hour block. `0` = derive from `#claudeUsage.plan#`." },
+        "claudeUsage.weeklyTokenLimit": { "type": "number", "default": 0, "markdownDescription": "Tokens per week. `0` = derive from `#claudeUsage.plan#`." },
+        "claudeUsage.autoCalibrate": { "type": "boolean", "default": true, "description": "Raise the limit automatically when observed usage exceeds the plan preset." },
+        "claudeUsage.blockHours": { "type": "number", "default": 5, "minimum": 1, "maximum": 24, "description": "Length of a usage block in hours." },
+        "claudeUsage.weeklyMode": { "type": "string", "enum": ["rolling7d", "calendar"], "default": "rolling7d", "enumDescriptions": ["Rolling 168-hour window", "Calendar week starting on the configured day"], "description": "How the weekly window is measured." },
+        "claudeUsage.weekStartsOn": { "type": "string", "enum": ["sunday", "monday"], "default": "monday", "description": "First day of the calendar week." },
+        "claudeUsage.statusBar.enabled": { "type": "boolean", "default": true, "description": "Show the status bar item." },
+        "claudeUsage.statusBar.alignment": { "type": "string", "enum": ["left", "right"], "default": "right", "description": "Status bar side." },
+        "claudeUsage.statusBar.priority": { "type": "number", "default": 100, "description": "Status bar ordering priority (higher is further left)." },
+        "claudeUsage.statusBar.metric": { "type": "string", "enum": ["block", "week", "today", "session"], "default": "block", "enumDescriptions": ["Current 5-hour block", "Weekly window", "Calendar day", "Active session"], "description": "Primary metric shown in the status bar." },
+        "claudeUsage.statusBar.showMeter": { "type": "boolean", "default": true, "description": "Render the chunk meter." },
+        "claudeUsage.statusBar.meterWidth": { "type": "number", "default": 10, "minimum": 4, "maximum": 30, "description": "Number of meter segments." },
+        "claudeUsage.statusBar.meterStyle": { "type": "string", "enum": ["blocks", "bars", "dots", "ascii", "sparkline"], "default": "blocks", "enumDescriptions": ["███░░", "▎▎▎▕▕", "●●●○○", "[###--]", "Burn-rate sparkline"], "description": "Meter glyph style." },
+        "claudeUsage.statusBar.showPercent": { "type": "boolean", "default": true, "description": "Show percentage used." },
+        "claudeUsage.statusBar.showReset": { "type": "boolean", "default": true, "description": "Show time remaining until the window resets." },
+        "claudeUsage.statusBar.showTokens": { "type": "boolean", "default": false, "description": "Show the raw token count." },
+        "claudeUsage.statusBar.showCost": { "type": "boolean", "default": false, "description": "Show cost in the status bar." },
+        "claudeUsage.statusBar.showIcon": { "type": "boolean", "default": true, "description": "Show the leading icon." },
+        "claudeUsage.statusBar.useColors": { "type": "boolean", "default": true, "description": "Tint the status bar background at the warning and danger thresholds." },
+        "claudeUsage.statusBar.warnThreshold": { "type": "number", "default": 60, "minimum": 1, "maximum": 100, "description": "Percent at which the meter turns warning-colored." },
+        "claudeUsage.statusBar.dangerThreshold": { "type": "number", "default": 85, "minimum": 1, "maximum": 100, "description": "Percent at which the meter turns error-colored." },
+        "claudeUsage.statusBar.clickAction": { "type": "string", "enum": ["openDashboard", "cycleMetric", "refresh", "none"], "default": "openDashboard", "description": "What clicking the status bar item does." },
+        "claudeUsage.refreshIntervalMs": { "type": "number", "default": 3000, "minimum": 500, "description": "Polling interval in milliseconds." },
+        "claudeUsage.watchFiles": { "type": "boolean", "default": true, "description": "Watch the transcript directory and refresh immediately on change." },
+        "claudeUsage.claudeDir": { "type": "string", "default": "", "markdownDescription": "Override the Claude Code data directory. Empty = `$CLAUDE_CONFIG_DIR` or `~/.claude`." },
+        "claudeUsage.lookbackDays": { "type": "number", "default": 30, "minimum": 1, "description": "How many days of transcripts to load. Lower is faster on large histories." },
+        "claudeUsage.countInput": { "type": "boolean", "default": true, "description": "Count uncached input tokens." },
+        "claudeUsage.countOutput": { "type": "boolean", "default": true, "description": "Count output tokens." },
+        "claudeUsage.countCacheWrites": { "type": "boolean", "default": true, "description": "Count cache-creation tokens." },
+        "claudeUsage.countCacheReads": { "type": "boolean", "default": true, "description": "Count cache-read tokens. These dominate totals; turn off for a billing-weighted view." },
+        "claudeUsage.includeSubagents": { "type": "boolean", "default": true, "description": "Include subagent (sidechain) messages." },
+        "claudeUsage.projectFilter": { "type": "string", "enum": ["all", "currentWorkspace"], "default": "all", "description": "Count every project or only the open workspace." },
+        "claudeUsage.cost.enabled": { "type": "boolean", "default": true, "description": "Compute and display USD cost." },
+        "claudeUsage.cost.currencySymbol": { "type": "string", "default": "$", "description": "Currency symbol prefix." },
+        "claudeUsage.cost.pricing": {
+          "type": "object",
+          "default": {},
+          "markdownDescription": "Per-model price overrides in USD per million tokens. Example:\n\n```json\n{ \"claude-opus-5\": { \"input\": 15, \"output\": 75, \"cacheWrite\": 18.75, \"cacheRead\": 1.5 } }\n```"
+        },
+        "claudeUsage.dashboard.defaultRange": { "type": "string", "enum": ["block", "today", "week", "month", "all"], "default": "block", "description": "Range selected when the dashboard opens." },
+        "claudeUsage.dashboard.showSessions": { "type": "boolean", "default": true, "description": "Show the per-session list." },
+        "claudeUsage.dashboard.maxSessions": { "type": "number", "default": 8, "minimum": 1, "maximum": 50, "description": "Maximum sessions listed." },
+        "claudeUsage.dashboard.showModels": { "type": "boolean", "default": true, "description": "Show the per-model table." },
+        "claudeUsage.dashboard.showHistory": { "type": "boolean", "default": true, "description": "Show the daily history chart." },
+        "claudeUsage.dashboard.accentColor": { "type": "string", "default": "#D97757", "description": "Accent color for meters and highlights." },
+        "claudeUsage.notifications.enabled": { "type": "boolean", "default": true, "description": "Warn when a usage threshold is crossed." },
+        "claudeUsage.notifications.thresholds": { "type": "array", "items": { "type": "number" }, "default": [75, 90], "description": "Percentages that trigger a warning." }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run typecheck && node esbuild.mjs --production",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
