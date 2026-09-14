@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- Limit percentages now use the Claude Code sign-in already present on this machine, so there is nothing to connect. Pasting a token is only a fallback for machines where that store cannot be read
+- The credential is re-read periodically, so Claude Code refreshing its own token is picked up without a reload
+- Marketplace publisher id corrected to `Mehrshad`
+
 ## 0.3.0
 
 Implements the design system: an instrument, not a dashboard.

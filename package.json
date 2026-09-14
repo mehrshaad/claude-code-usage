@@ -2,7 +2,7 @@
   "name": "claude-code-usage",
   "displayName": "Claude Code Usage",
   "description": "Live Claude Code usage in your status bar: 5-hour block meter, weekly rolling limit, per-model and per-session breakdown.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -76,12 +76,12 @@
       },
       {
         "command": "claudeUsage.connect",
-        "title": "Connect Account",
+        "title": "Paste Account Token (fallback)",
         "category": "Claude Usage"
       },
       {
         "command": "claudeUsage.disconnect",
-        "title": "Disconnect Account",
+        "title": "Remove Pasted Token",
         "category": "Claude Usage"
       },
       {
@@ -125,7 +125,7 @@
             "Only the account endpoint",
             "Only local transcripts - no limit percentages"
           ],
-          "markdownDescription": "Where limit percentages come from. Session and weekly percentages are computed by Claude and can only be read from your account; transcripts alone give tokens, cost and burn rate."
+          "markdownDescription": "Where limit percentages come from. Session and weekly percentages are computed by Claude and are read from the Claude Code sign-in already on this machine; transcripts alone give tokens, cost and burn rate."
         },
         "claudeUsage.apiPollSeconds": {
           "type": "number",

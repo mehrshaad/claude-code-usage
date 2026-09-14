@@ -142,7 +142,9 @@ export function activate(context: vscode.ExtensionContext): void {
       await api.disconnect();
       report = undefined;
       await refresh();
-      void vscode.window.showInformationMessage('Claude usage: account disconnected. Showing token and cost totals only.');
+      void vscode.window.showInformationMessage(
+        'Claude usage: the pasted token was removed. A Claude Code sign-in on this machine is still used if present.'
+      );
     }),
     vscode.commands.registerCommand('claudeUsage.toggleCost', async () => {
       await vscode.workspace.getConfiguration('claudeUsage').update(
@@ -197,12 +199,14 @@ export function activate(context: vscode.ExtensionContext): void {
   void (async () => {
     await refreshAccount();
     await refresh();
-    if (!report && cfg.source !== 'transcripts' && !(await api.hasToken())) {
+    // The Claude Code sign-in is picked up automatically; only ask when there
+    // is genuinely no credential to find.
+    if (!report && cfg.source !== 'transcripts' && (await api.source()) === 'none') {
       const choice = await vscode.window.showInformationMessage(
-        'Claude Code Usage: connect your account to show real session and weekly limit percentages. Without it, only token and cost totals are available.',
-        'Connect', 'Not now'
+        'Claude Code Usage: no Claude Code sign-in found, so limit percentages are unavailable. Sign in with Claude Code, or paste a token.',
+        'Paste token', 'Not now'
       );
-      if (choice === 'Connect') { await vscode.commands.executeCommand('claudeUsage.connect'); }
+      if (choice === 'Paste token') { await vscode.commands.executeCommand('claudeUsage.connect'); }
     }
   })();
 }

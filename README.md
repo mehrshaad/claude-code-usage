@@ -49,9 +49,11 @@ Only bytes appended since the last pass are parsed, so a refresh costs a few mil
 
 **Limit percentages cannot be derived from transcript tokens.** Claude computes them server-side, and they are weighted very differently from raw usage: a session window holding 68M transcript tokens reports single-digit utilization, because cache reads — which dominate every total — barely count toward the limit. Any extension that sums JSONL tokens and calls the result a percentage is guessing, and will be wrong by an order of magnitude.
 
-So percentages come from your account, the same source `/usage` reads. Run **Claude Usage: Connect Account** and paste a token from `claude setup-token`; it is kept in VS Code's encrypted secret storage, never in settings or on disk in plain text. The session and weekly gauges then match `/usage` exactly, including per-model weekly figures.
+So percentages come from your account, the same source `/usage` reads — using the Claude Code sign-in already on this machine. There is nothing to set up: if you are signed in to Claude Code, the session and weekly gauges match `/usage` exactly, including the per-model weekly figures. macOS asks once for keychain access the first time VS Code reads it.
 
-Without a connected account the extension still works — tokens, cost, burn rate, per-model and per-session breakdowns, all local — but it shows **no percentage**, rather than a fabricated one. If you want a meter anyway, set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` to ceilings of your own choosing.
+If no sign-in can be found (or the store is unreadable), **Claude Usage: Paste Account Token** takes a token from `claude setup-token` and keeps it in VS Code's encrypted secret storage.
+
+Without a sign-in the extension still works — tokens, cost, burn rate, per-model and per-session breakdowns, all local — but it shows **no percentage**, rather than a fabricated one. If you want a meter anyway, set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` to ceilings of your own choosing.
 
 Costs use the published per-million-token API rates, including cache write and read multipliers. On a subscription the dollar figure is notional — what the same traffic would cost on the API. Turn it off with `claudeUsage.cost.enabled`, or override rates per model with `claudeUsage.cost.pricing`.
 
@@ -98,8 +100,8 @@ Full list with descriptions: **Settings → Extensions → Claude Code Usage**.
 | `Claude Usage: Open Dashboard` | Reveal the side panel |
 | `Claude Usage: Refresh Now` | Force a rescan pass |
 | `Claude Usage: Cycle Status Bar Metric` | Switch block / week / today / session |
-| `Claude Usage: Connect Account` | Store a token so limit percentages go live |
-| `Claude Usage: Disconnect Account` | Forget the token, fall back to local totals |
+| `Claude Usage: Paste Account Token (fallback)` | Only needed when no Claude Code sign-in is found |
+| `Claude Usage: Remove Pasted Token` | Forget a pasted token |
 | `Claude Usage: Toggle Cost Display` | Show or hide dollar figures |
 | `Claude Usage: Copy Stats to Clipboard` | Copy the current summary |
 | `Claude Usage: Full Rescan (clear cache)` | Rebuild from disk |
@@ -108,7 +110,7 @@ Full list with descriptions: **Settings → Extensions → Claude Code Usage**.
 
 The extension reads local transcript files — only their `usage` counters, model ids, timestamps, session ids and working-directory names, never message content. It has no telemetry and sends nothing anywhere.
 
-If you connect an account it makes exactly one kind of network request: a periodic `GET https://api.anthropic.com/api/oauth/usage` carrying your token, which returns your own limit percentages. The token lives in VS Code's encrypted `SecretStorage`. Disconnect at any time with **Claude Usage: Disconnect Account**.
+For limit percentages it makes exactly one kind of network request: a periodic `GET https://api.anthropic.com/api/oauth/usage` carrying your existing Claude Code credential, which returns your own limit percentages. The credential is read from the local store Claude Code already uses — it is never copied, written elsewhere, or sent anywhere but that endpoint. Set `claudeUsage.source` to `transcripts` to disable the lookup entirely.
 
 ## Development
 
