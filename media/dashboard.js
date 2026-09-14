@@ -16,14 +16,14 @@
   };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  function gauge(name, w, sub, state) {
+  function gauge(name, w, sub, state, s, cur) {
     const cls = w.percent >= state.danger ? 'danger' : w.percent >= state.warn ? 'warn' : '';
-    const pct = w.limit > 0 ? Math.min(100, w.percent) : 0;
+    const pct = w.hasPercent ? Math.min(100, w.percent) : 0;
     return `<div class="gauge">
       <div class="gauge-head"><span class="gauge-name">${esc(name)}</span>
-      <span class="gauge-pct">${w.limit > 0 ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span></div>
-      <div class="track"><div class="fill ${cls}" style="width:${pct}%"></div></div>
-      <div class="gauge-sub"><span>${fmt(w.totals.counted)} / ${w.limit > 0 ? fmt(w.limit) : '—'} tok</span><span>${esc(sub)}</span></div>
+      <span class="gauge-pct">${w.hasPercent ? Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span></div>
+      ${w.hasPercent ? `<div class="track"><div class="fill ${cls}" style="width:${pct}%"></div></div>` : ''}
+      <div class="gauge-sub"><span>${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span><span>${esc(sub)}</span></div>
     </div>`;
   }
 
@@ -54,8 +54,10 @@
 
     root.innerHTML = `
       <section>
-        ${gauge('5-hour block', s.block, 'resets in ' + dur(s.block.remainingMs), state)}
-        ${gauge(s.weeklyMode === 'rolling7d' ? 'Rolling 7 days' : 'This week', s.week, s.weeklyMode === 'rolling7d' ? 'rolling' : 'resets ' + new Date(s.week.end).toLocaleDateString(), state)}
+        ${gauge('Session', s.block, 'resets in ' + dur(s.block.remainingMs), state, s, cur)}
+        ${gauge('Week', s.week, s.source === 'account' ? 'resets ' + new Date(s.week.end).toLocaleDateString() : (s.weeklyMode === 'rolling7d' ? 'rolling 7 days' : 'resets ' + new Date(s.week.end).toLocaleDateString()), state, s, cur)}
+        ${s.opusWeek != null ? `<div class="gauge-sub"><span>Opus week ${Math.round(s.opusWeek)}%</span><span>${s.sonnetWeek != null ? 'Sonnet week ' + Math.round(s.sonnetWeek) + '%' : ''}</span></div>` : ''}
+        ${s.source !== 'account' ? '<p class="empty">Limit percentages need your account — run <b>Claude Usage: Connect Account</b>.</p>' : ''}
       </section>
       <section class="tiles">
         <div class="tile"><div class="tile-label">Today</div><div class="tile-value">${fmt(s.today.counted)}</div><div class="tile-sub">${money(s.today.cost) || s.today.messages + ' msgs'}</div></div>
@@ -67,7 +69,7 @@
       ${s.showSessions ? `<section><h2>Sessions</h2>${sessions}</section>` : ''}
       ${s.showHistory ? `<section><h2>Last 30 days</h2><div class="spark">${bars}</div>
         <div class="axis"><span>${esc(s.history[0].date.slice(5))}</span><span>${esc(s.history[s.history.length - 1].date.slice(5))}</span></div></section>` : ''}
-      <footer><span>${s.eventCount} messages · ${s.lookbackDays}d window</span><span>${new Date(s.lastUpdate).toLocaleTimeString()}</span></footer>`;
+      <footer><span>${s.source === 'account' ? 'live limits' : 'local only'} · ${s.eventCount} msgs</span><span>${new Date(s.lastUpdate).toLocaleTimeString()}</span></footer>`;
   }
 
   window.addEventListener('message', (event) => {

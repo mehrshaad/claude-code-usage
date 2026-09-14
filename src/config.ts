@@ -1,13 +1,12 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { PlanId } from './types';
 
 export interface Config {
-  plan: PlanId;
+  source: 'auto' | 'account' | 'transcripts';
+  apiPollSeconds: number;
   blockTokenLimit: number;
   weeklyTokenLimit: number;
-  autoCalibrate: boolean;
   blockHours: number;
   weeklyMode: 'rolling7d' | 'calendar';
   weekStartsOn: 'sunday' | 'monday';
@@ -59,10 +58,10 @@ export function readConfig(): Config {
   const c = vscode.workspace.getConfiguration('claudeUsage');
   const g = <T>(key: string, fallback: T): T => c.get<T>(key) ?? fallback;
   return {
-    plan: g('plan', 'max20'),
+    source: g('source', 'auto'),
+    apiPollSeconds: g('apiPollSeconds', 60),
     blockTokenLimit: g('blockTokenLimit', 0),
     weeklyTokenLimit: g('weeklyTokenLimit', 0),
-    autoCalibrate: g('autoCalibrate', true),
     blockHours: g('blockHours', 5),
     weeklyMode: g('weeklyMode', 'rolling7d'),
     weekStartsOn: g('weekStartsOn', 'monday'),

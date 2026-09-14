@@ -1,6 +1,6 @@
 import type { Config } from './config';
+import type { LimitWindow, UsageReport } from './usageApi';
 import { costOf, priceFor } from './pricing';
-import { PLAN_LIMITS } from './types';
 import type {
   DayRow, ModelRow, SessionRow, Snapshot, Totals, UsageEvent, Window
 } from './types';
@@ -58,9 +58,10 @@ function startOfWeek(ts: number, weekStartsOn: 'sunday' | 'monday'): number {
 }
 
 /**
- * Rebuilds the rolling usage blocks. A block opens at the top of the hour of its
- * first message and runs for blockHours; a gap of a full block also opens a new
- * one, matching how the rate-limit window is described in the Claude apps.
+ * Rebuilds the rolling usage blocks. A block opens at its first message and runs
+ * for blockHours; a gap of a full block also opens a new
+ * one. The window is anchored to the exact first message rather than the top of
+ * the hour: Claude Code reports resets on the minute ("resets 1:40pm").
  */
 export function currentBlock(events: UsageEvent[], now: number, blockHours: number): { start: number; end: number; events: UsageEvent[] } {
   const span = blockHours * 3_600_000;
@@ -70,38 +71,45 @@ export function currentBlock(events: UsageEvent[], now: number, blockHours: numb
   let bucket: UsageEvent[] = [];
   for (const e of sorted) {
     if (!bucket.length || e.ts >= start + span || e.ts - last >= span) {
-      start = new Date(e.ts).setMinutes(0, 0, 0);
+      start = e.ts;
       bucket = [];
     }
     bucket.push(e);
     last = e.ts;
   }
   if (!bucket.length || now >= start + span) {
-    const fresh = new Date(now).setMinutes(0, 0, 0);
-    return { start: fresh, end: fresh + span, events: [] };
+    return { start: now, end: now + span, events: [] };
   }
   return { start, end: start + span, events: bucket };
 }
 
-function makeWindow(start: number, end: number, totals: Totals, limit: number, now: number): Window {
+function makeWindow(
+  start: number, end: number, totals: Totals, limit: number, now: number,
+  reported: LimitWindow | undefined
+): Window {
+  if (reported) {
+    const resetAt = reported.resetsAt ?? end;
+    return {
+      start, end: resetAt, totals, limit,
+      percent: reported.utilization, hasPercent: true,
+      remainingMs: Math.max(0, resetAt - now)
+    };
+  }
   const percent = limit > 0 ? Math.min(999, (totals.counted / limit) * 100) : 0;
-  return { start, end, totals, limit, percent, remainingMs: Math.max(0, end - now) };
-}
-
-export interface Calibration {
-  block: number;
-  week: number;
+  return {
+    start, end, totals, limit, percent, hasPercent: limit > 0,
+    remainingMs: Math.max(0, end - now)
+  };
 }
 
 export function buildSnapshot(
   allEvents: UsageEvent[],
   cfg: Config,
   workspace: string | undefined,
-  calibration: Calibration,
+  report: UsageReport | undefined,
   now = Date.now()
-): { snapshot: Snapshot; calibration: Calibration } {
+): Snapshot {
   const events = filterEvents(allEvents, cfg, workspace);
-  const plan = PLAN_LIMITS[cfg.plan];
 
   const block = currentBlock(events, now, cfg.blockHours);
   const blockTotals = sum(block.events, cfg);
@@ -113,13 +121,8 @@ export function buildSnapshot(
   const weekEvents = events.filter((e) => e.ts >= weekStart);
   const weekTotals = sum(weekEvents, cfg);
 
-  const nextCalibration: Calibration = {
-    block: Math.max(calibration.block, blockTotals.counted),
-    week: Math.max(calibration.week, weekTotals.counted)
-  };
-
-  const blockLimit = resolveLimit(cfg.blockTokenLimit, plan.block, cfg.autoCalibrate ? nextCalibration.block : 0);
-  const weekLimit = resolveLimit(cfg.weeklyTokenLimit, plan.week, cfg.autoCalibrate ? nextCalibration.week : 0);
+  const blockLimit = cfg.blockTokenLimit;
+  const weekLimit = cfg.weeklyTokenLimit;
 
   const dayStart = startOfDay(now);
   const today = sum(events.filter((e) => e.ts >= dayStart), cfg);
@@ -137,8 +140,8 @@ export function buildSnapshot(
     : undefined;
 
   const snapshot: Snapshot = {
-    block: makeWindow(block.start, block.end, blockTotals, blockLimit, now),
-    week: makeWindow(weekStart, weekEnd, weekTotals, weekLimit, now),
+    block: makeWindow(block.start, block.end, blockTotals, blockLimit, now, report?.fiveHour),
+    week: makeWindow(weekStart, weekEnd, weekTotals, weekLimit, now, report?.sevenDay),
     today,
     session,
     models,
@@ -150,15 +153,12 @@ export function buildSnapshot(
     scannedFiles: 0,
     eventCount: events.length,
     lastUpdate: now,
-    costEnabled: cfg.cost.enabled
+    costEnabled: cfg.cost.enabled,
+    source: report ? 'account' : 'transcripts',
+    opusWeek: report?.sevenDayOpus?.utilization,
+    sonnetWeek: report?.sevenDaySonnet?.utilization
   };
-  return { snapshot, calibration: nextCalibration };
-}
-
-function resolveLimit(explicit: number, planLimit: number, observed: number): number {
-  const base = explicit > 0 ? explicit : planLimit;
-  if (base <= 0) { return observed; }
-  return observed > base ? observed : base;
+  return snapshot;
 }
 
 function buildSessions(events: UsageEvent[], cfg: Config, now: number): SessionRow[] {

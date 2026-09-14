@@ -29,6 +29,8 @@ export interface Window {
   totals: Totals;
   limit: number;
   percent: number;
+  /** False when no authoritative percentage exists - render tokens, not a meter. */
+  hasPercent: boolean;
   remainingMs: number;
 }
 
@@ -66,25 +68,7 @@ export interface Snapshot {
   eventCount: number;
   lastUpdate: number;
   costEnabled: boolean;
+  source: 'account' | 'transcripts';
+  opusWeek: number | undefined;
+  sonnetWeek: number | undefined;
 }
-
-export type PlanId = 'pro' | 'max5' | 'max20' | 'team' | 'api' | 'custom';
-
-export interface PlanLimits {
-  block: number;
-  week: number;
-}
-
-/**
- * Anthropic does not publish subscription limits as token counts, so these are
- * approximations used only as meter denominators. Observed usage above them
- * raises the denominator when autoCalibrate is on.
- */
-export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
-  pro: { block: 19_000_000, week: 190_000_000 },
-  max5: { block: 88_000_000, week: 880_000_000 },
-  max20: { block: 220_000_000, week: 2_200_000_000 },
-  team: { block: 88_000_000, week: 880_000_000 },
-  api: { block: 0, week: 0 },
-  custom: { block: 0, week: 0 }
-};

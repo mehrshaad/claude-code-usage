@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0
+
+Fixes a wrong premise in 0.1.0: limit percentages were estimated from transcript token sums against guessed plan ceilings. They were wrong by roughly an order of magnitude — a window Claude reported as 7% used showed as 61%.
+
+- Percentages now come from the account usage endpoint, the same source `/usage` reads, via **Claude Usage: Connect Account** (token held in VS Code `SecretStorage`)
+- Weekly per-model figures surfaced alongside the totals
+- Without a connected account the extension shows tokens, cost and burn rate and **no percentage**, instead of a fabricated one
+- Plan presets and auto-calibration removed; `blockTokenLimit` / `weeklyTokenLimit` remain as opt-in fallback ceilings
+- Usage windows anchor to the exact first message rather than the top of the hour, matching Claude's on-the-minute reset times ("resets 1:40pm")
+
 ## 0.1.0
 
 First release.

@@ -6,7 +6,7 @@ Reads the transcripts Claude Code already writes to `~/.claude/projects` and tur
 
 ## What it shows
 
-**Status bar** — a chunk meter for the current 5-hour block, percent used, and time until it resets:
+**Status bar** — a chunk meter for the current session limit, percent used, and time until it resets:
 
 ```
 ██████░░░░ 62% · 1h47m
@@ -16,7 +16,7 @@ The item turns amber at the warning threshold and red at the danger threshold. C
 
 **Dashboard** — a side panel with:
 
-- 5-hour block and weekly gauges
+- session and weekly limit gauges, plus per-model weekly figures
 - today, active session, burn rate (tokens/min) and total tiles
 - per-model table with tokens, cost and message counts
 - live session list, active sessions marked
@@ -42,9 +42,13 @@ Every assistant message Claude Code writes carries a `usage` block. This extensi
 
 Only bytes appended since the last pass are parsed, so a refresh costs a few milliseconds even with tens of thousands of transcripts on disk. A filesystem watcher triggers a refresh the moment Claude Code writes, with polling as a fallback.
 
-### About the percentages
+### Where the percentages come from
 
-Anthropic does not publish subscription rate limits as token counts, so the plan presets are **approximations** used as meter denominators. If your real usage goes past the preset, `claudeUsage.autoCalibrate` raises the denominator to what you've actually reached. Set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` if you want exact numbers of your own. On the `api` plan there is no ceiling, so the meter shows raw totals instead of a percentage.
+**Limit percentages cannot be derived from transcript tokens.** Claude computes them server-side, and they are weighted very differently from raw usage: a session window holding 68M transcript tokens reports single-digit utilization, because cache reads — which dominate every total — barely count toward the limit. Any extension that sums JSONL tokens and calls the result a percentage is guessing, and will be wrong by an order of magnitude.
+
+So percentages come from your account, the same source `/usage` reads. Run **Claude Usage: Connect Account** and paste a token from `claude setup-token`; it is kept in VS Code's encrypted secret storage, never in settings or on disk in plain text. The session and weekly gauges then match `/usage` exactly, including per-model weekly figures.
+
+Without a connected account the extension still works — tokens, cost, burn rate, per-model and per-session breakdowns, all local — but it shows **no percentage**, rather than a fabricated one. If you want a meter anyway, set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` to ceilings of your own choosing.
 
 Costs use the published per-million-token API rates, including cache write and read multipliers. On a subscription the dollar figure is notional — what the same traffic would cost on the API. Turn it off with `claudeUsage.cost.enabled`, or override rates per model with `claudeUsage.cost.pricing`.
 
@@ -52,10 +56,10 @@ Costs use the published per-million-token API rates, including cache write and r
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `claudeUsage.plan` | `max20` | Plan preset behind the meter denominators |
-| `claudeUsage.blockTokenLimit` | `0` | Explicit block ceiling (`0` = from plan) |
-| `claudeUsage.weeklyTokenLimit` | `0` | Explicit weekly ceiling (`0` = from plan) |
-| `claudeUsage.autoCalibrate` | `true` | Raise the ceiling when real usage exceeds it |
+| `claudeUsage.source` | `auto` | Where percentages come from: account, transcripts, or auto |
+| `claudeUsage.apiPollSeconds` | `60` | How often to refresh limits from your account |
+| `claudeUsage.blockTokenLimit` | `0` | Fallback block ceiling when not connected (`0` = no meter) |
+| `claudeUsage.weeklyTokenLimit` | `0` | Fallback weekly ceiling when not connected (`0` = no meter) |
 | `claudeUsage.blockHours` | `5` | Length of a usage block |
 | `claudeUsage.weeklyMode` | `rolling7d` | Rolling 168 hours or calendar week |
 | `claudeUsage.weekStartsOn` | `monday` | First day of the calendar week |
@@ -91,15 +95,17 @@ Full list with descriptions: **Settings → Extensions → Claude Code Usage**.
 | `Claude Usage: Open Dashboard` | Reveal the side panel |
 | `Claude Usage: Refresh Now` | Force a rescan pass |
 | `Claude Usage: Cycle Status Bar Metric` | Switch block / week / today / session |
-| `Claude Usage: Set Plan` | Pick the plan preset |
+| `Claude Usage: Connect Account` | Store a token so limit percentages go live |
+| `Claude Usage: Disconnect Account` | Forget the token, fall back to local totals |
 | `Claude Usage: Toggle Cost Display` | Show or hide dollar figures |
 | `Claude Usage: Copy Stats to Clipboard` | Copy the current summary |
-| `Claude Usage: Reset Auto-Calibration` | Drop learned ceilings |
 | `Claude Usage: Full Rescan (clear cache)` | Rebuild from disk |
 
 ## Privacy
 
-The extension only reads local transcript files, and only their `usage` counters, model ids, timestamps, session ids and working-directory names. It makes no network requests, has no telemetry, and never reads message content.
+The extension reads local transcript files — only their `usage` counters, model ids, timestamps, session ids and working-directory names, never message content. It has no telemetry and sends nothing anywhere.
+
+If you connect an account it makes exactly one kind of network request: a periodic `GET https://api.anthropic.com/api/oauth/usage` carrying your token, which returns your own limit percentages. The token lives in VS Code's encrypted `SecretStorage`. Disconnect at any time with **Claude Usage: Disconnect Account**.
 
 ## Development
 
