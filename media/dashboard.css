@@ -10,7 +10,8 @@
   --fg: var(--vscode-foreground);
   --dim: var(--vscode-descriptionForeground);
   --ground: var(--vscode-editorWidget-background);
-  --line: var(--vscode-widget-border, var(--vscode-editorWidget-border));
+  --line: var(--vscode-widget-border, var(--vscode-editorWidget-border, rgba(127, 127, 127, 0.34)));
+  --track: var(--vscode-widget-border, rgba(127, 127, 127, 0.34));
   --live: var(--vscode-charts-green);
   --warn: var(--vscode-charts-yellow);
   --danger: var(--vscode-charts-red);
@@ -48,10 +49,10 @@ section.rule { border-top: 1px solid var(--line); padding-top: 12px; }
 .hero { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 18px; font-weight: 600; line-height: 1.1; }
 .hero.danger { color: var(--danger); }
 
-.track { position: relative; height: 6px; margin-top: 6px; background: var(--line); }
+.track { position: relative; height: 6px; margin-top: 6px; background: var(--track); overflow: hidden; }
 .track.week { height: 4px; }
 
-.fill { height: 100%; background: var(--accent); transition: width 240ms linear; }
+.fill { height: 100%; max-width: 100%; background: var(--accent); transition: width 240ms linear; }
 .fill.warn { background: var(--warn); }
 .fill.danger { background: var(--danger); }
 .track.week .fill { opacity: 0.7; }
@@ -112,17 +113,23 @@ td.name {
   white-space: nowrap;
   padding-right: 6px;
 }
-td.tok { width: 54px; }
-td.cost { width: 46px; }
-td.msgs { width: 38px; }
-td.sess { width: 50px; }
-td.scost { width: 42px; }
-td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--dim); }
+td.tok { width: 62px; }
+td.cost { width: 54px; }
+td.msgs { width: 46px; }
+td.sess { width: 58px; }
+td.scost { width: 50px; }
+td.n {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+  padding-left: 8px;
+}
 td.n.lead { color: var(--fg); }
 
 /* The 2px share rule replaces a percent column. */
-.share { height: 2px; background: var(--accent); }
-.share-cell { padding: 0 0 4px; }
+.share { height: 2px; background: var(--accent); opacity: 0.8; }
+.share-cell { padding: 1px 0 7px; }
 
 /* 05 - sessions: the dot is the only green in the UI. */
 .dot {
@@ -137,7 +144,7 @@ td.n.lead { color: var(--fg); }
 
 /* 06 - 30 days: lowest priority, least ink. */
 .spark { display: flex; align-items: flex-end; gap: 1px; height: 34px; }
-.spark span { flex: 1; min-width: 1px; background: var(--dim); opacity: 0.5; }
+.spark span { flex: 1; min-width: 1px; min-height: 1px; background: var(--dim); opacity: 0.5; }
 .spark span.today { background: var(--accent); opacity: 1; }
 .axis { display: flex; justify-content: space-between; margin-top: 3px; font-size: 9.5px; color: var(--dim); }
 

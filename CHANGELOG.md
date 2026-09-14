@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.1
+
+Panel fixes found by rendering it against real data.
+
+- Fixed columns in the model and session tables ran together (`169M$99.83304` was three values). They now carry real separation and a little more width
+- The week gauge showed nothing on the right when no per-model figures were available; it now always says when the window resets
+- The 2px share rule sat flush under the model name and read as an underline
+- Bar tracks stay visible in themes that define no widget border, and a fill can no longer outrun its track
+- A non-finite percentage would emit `width:NaN%`, which the browser discards - leaving the bar at its auto width, i.e. reading as 100%. Percentages are now validated before they reach the DOM, in the panel and the status bar both
+- The view is titled Claude Code Meter to match the published name
+
 ## 0.4.0
 
 - Limit percentages now use the Claude Code sign-in already present on this machine, so there is nothing to connect. Pasting a token is only a fallback for machines where that store cannot be read

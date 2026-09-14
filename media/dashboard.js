@@ -20,20 +20,26 @@
     return pct >= state.danger ? 'danger' : pct >= state.warn ? 'warn' : '';
   }
 
+  // A non-finite percent would emit width:NaN%, which the browser discards -
+  // leaving the fill at its auto width, i.e. a bar that reads as 100%.
+  const shown = (w) => w.hasPercent && Number.isFinite(w.percent);
+  const clamp = (p) => (Number.isFinite(p) ? Math.max(0, Math.min(100, p)) : 0);
+
   // 01 - block gauge. The caret marks where the current burn rate lands by reset;
   // past 100% the fill saturates and the caret sits behind it.
   function blockGauge(s, state, cur) {
     const w = s.block;
+    const has = shown(w);
     const cls = level(w.percent, state);
-    const width = w.hasPercent ? Math.min(100, w.percent) : 0;
+    const width = has ? clamp(w.percent) : 0;
     const caret = caretPercent(s);
     return `<section>
       <div class="gauge-head">
         <span class="gauge-name">Session</span>
-        <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${w.hasPercent ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+        <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
       </div>
-      ${w.hasPercent ? `<div class="track"><div class="fill ${cls}" style="width:${width}%"></div>${
-        caret != null ? `<div class="caret" style="left:${Math.min(100, caret)}%" title="projected at current burn"></div>` : ''
+      ${has ? `<div class="track"><div class="fill ${cls}" style="width:${width}%"></div>${
+        caret != null ? `<div class="caret" style="left:${clamp(caret)}%" title="projected at current burn"></div>` : ''
       }</div>` : ''}
       <div class="gauge-sub">
         <span>${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span>
@@ -55,16 +61,23 @@
   // 02 - week. Secondary by size and weight only, never by hue.
   function weekGauge(s, state, cur) {
     const w = s.week;
+    const has = shown(w);
     const cls = level(w.percent, state);
     const parts = [];
     if (s.opusWeek != null) { parts.push('opus ' + Math.round(s.opusWeek) + '%'); }
     if (s.sonnetWeek != null) { parts.push('sonnet ' + Math.round(s.sonnetWeek) + '%'); }
+    // Always say when the window turns over, even with no per-model figures.
+    if (!parts.length) {
+      parts.push(has && w.remainingMs > 0
+        ? 'resets ' + new Date(w.end).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        : s.weeklyMode === 'rolling7d' ? 'rolling 7 days' : 'this week');
+    }
     return `<section class="rule">
       <div class="week-row">
         <span class="gauge-name">Week</span>
-        <span class="week-pct num">${w.hasPercent ? Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span>
+        <span class="week-pct num">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span>
       </div>
-      ${w.hasPercent ? `<div class="track week"><div class="fill ${cls}" style="width:${Math.min(100, w.percent)}%"></div></div>` : ''}
+      ${has ? `<div class="track week"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
       <div class="gauge-sub">
         <span>${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span>
         <span>${esc(parts.join(' · '))}</span>
@@ -111,7 +124,7 @@
   function history(s) {
     const peak = Math.max(1, ...s.history.map((d) => d.counted));
     const bars = s.history.map((d, i) =>
-      `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${Math.max(1, (d.counted / peak) * 100)}%" title="${d.date} · ${fmt(d.counted)} tok"></span>`
+      `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${clamp((d.counted / peak) * 100) || 1}%" title="${d.date} · ${fmt(d.counted)} tok"></span>`
     ).join('');
     return `<section class="rule"><h2>30 days</h2><div class="spark">${bars}</div>
       <div class="axis"><span>${esc(s.history[0].date.slice(5))}</span><span>${esc(s.history[s.history.length - 1].date.slice(5))}</span></div></section>`;
@@ -145,7 +158,7 @@
 
   function render(s) {
     if (!s) { root.innerHTML = skeleton(); return; }
-    if (!s.eventCount && !s.block.hasPercent) { root.innerHTML = noData(); return; }
+    if (!s.eventCount && !shown(s.block)) { root.innerHTML = noData(); return; }
 
     const cur = s.currencySymbol;
     const money = (v) => (s.costEnabled ? cur + v.toFixed(2) : '');

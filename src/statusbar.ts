@@ -35,7 +35,8 @@ export function formatDuration(ms: number): string {
 
 /** Percentages reserve three integer digits so the meter never shifts. */
 export function formatPercent(percent: number): string {
-  return `${String(Math.round(percent)).padStart(3, ' ')}%`;
+  const value = Number.isFinite(percent) ? Math.round(percent) : 0;
+  return `${String(value).padStart(3, ' ')}%`;
 }
 
 export function meter(percent: number, width: number, style: string, series: number[]): string {
@@ -46,7 +47,8 @@ export function meter(percent: number, width: number, style: string, series: num
   }
 
   const [full, empty] = METER_GLYPHS[style] ?? METER_GLYPHS.ticks;
-  const exact = Math.max(0, Math.min(1, percent / 100)) * width;
+  const safe = Number.isFinite(percent) ? percent : 0;
+  const exact = Math.max(0, Math.min(1, safe / 100)) * width;
   const filled = Math.floor(exact);
 
   // Half-step and braille meters spend their remainder on a partial cell, so the
