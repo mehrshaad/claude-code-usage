@@ -3,7 +3,7 @@
   "displayName": "Claude Code Usage",
   "description": "Live Claude Code usage in your status bar: 5-hour block meter, weekly rolling limit, per-model and per-session breakdown.",
   "version": "0.3.0",
-  "publisher": "mehrshaad",
+  "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
   "engines": {
