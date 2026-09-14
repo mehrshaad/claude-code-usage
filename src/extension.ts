@@ -7,7 +7,7 @@ import { costOf, priceFor } from './pricing';
 import { Scanner } from './scanner';
 import { DashboardView } from './dashboard';
 import { StatusBar, formatTokens } from './statusbar';
-import { UsageApi } from './usageApi';
+import { UsageApi, lastKeychainError } from './usageApi';
 import type { UsageReport } from './usageApi';
 import type { Snapshot, Totals } from './types';
 
@@ -163,6 +163,26 @@ export function activate(context: vscode.ExtensionContext): void {
       ];
       await vscode.env.clipboard.writeText(lines.join('\n'));
       void vscode.window.showInformationMessage('Claude usage copied to the clipboard.');
+    }),
+    vscode.commands.registerCommand('claudeUsage.diagnostics', async () => {
+      const source = await api.source();
+      const lines = [
+        `Transcript directory : ${resolveProjectsDir(cfg)}`,
+        `Files scanned        : ${snapshot?.scannedFiles ?? 0}`,
+        `Messages counted     : ${snapshot?.eventCount ?? 0}`,
+        `Percentage source    : ${snapshot?.source ?? 'unknown'}`,
+        `Credential found     : ${source}`,
+        `Last account error   : ${api.lastError ?? 'none'}`,
+        `Keychain read error  : ${lastKeychainError ?? 'none'}`,
+        '',
+        source === 'none'
+          ? 'No Claude Code credential could be read. On macOS the keychain prompts the first time VS Code reads it - if that prompt was dismissed, quit VS Code, reopen, and choose Always Allow. Otherwise use Claude Usage: Paste Account Token.'
+          : 'A credential was found. If percentages are still missing, the error above explains why.'
+      ];
+      const channel = vscode.window.createOutputChannel('Claude Usage');
+      channel.clear();
+      channel.appendLine(lines.join('\n'));
+      channel.show(true);
     }),
     vscode.commands.registerCommand('claudeUsage.rescan', async () => {
       scanner.reset();

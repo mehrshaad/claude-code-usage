@@ -40,6 +40,8 @@ const KEYCHAIN_SERVICE = 'Claude Code-credentials';
 export class UsageApi {
   private cached: { token: string; source: TokenSource } | undefined;
   private cachedAt = 0;
+  /** Why the last lookup failed, for the diagnostics command. */
+  public lastError: string | undefined;
 
   constructor(private readonly secrets: vscode.SecretStorage) {}
 
@@ -96,7 +98,10 @@ export class UsageApi {
   /** Resolves undefined when no credential is available, throws on a failed call. */
   async fetch(): Promise<UsageReport | undefined> {
     const resolved = await this.resolve();
-    if (!resolved) { return undefined; }
+    if (!resolved) {
+      this.lastError = 'no Claude Code credential found on this machine';
+      return undefined;
+    }
 
     const response = await fetch(ENDPOINT, {
       headers: {
@@ -108,19 +113,24 @@ export class UsageApi {
     if (!response.ok) {
       // A refreshed or revoked credential invalidates the cache immediately.
       if (response.status === 401 || response.status === 403) { this.invalidate(); }
-      throw new Error(`usage endpoint returned ${response.status}`);
+      this.lastError = `usage endpoint returned ${response.status} ${response.statusText}`;
+      throw new Error(this.lastError);
     }
+    this.lastError = undefined;
     return normalize(await response.json() as Record<string, unknown>);
   }
 }
+
+export let lastKeychainError: string | undefined;
 
 async function readKeychain(): Promise<string | undefined> {
   if (process.platform !== 'darwin') { return undefined; }
   try {
     const { stdout } = await run('security', ['find-generic-password', '-s', KEYCHAIN_SERVICE, '-w']);
     return extractToken(stdout.trim());
-  } catch {
-    // Not present, or the user declined the keychain prompt.
+  } catch (err) {
+    // Not present, or the keychain prompt was declined.
+    lastKeychainError = err instanceof Error ? err.message.split('\n')[0] : String(err);
     return undefined;
   }
 }
