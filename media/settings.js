@@ -53,7 +53,11 @@
     ['#D97757', 'coral'], ['#8A9A5B', 'sage'], ['#6B7FA3', 'slate'], ['#9A7AA0', 'mauve']
   ];
 
-  let state = { sections: [], specs: [], values: [], open: null, filter: '', percent: 62.4, confirm: null };
+  // Previews render at the real percentage when there is one; with no account
+  // that is 0, which would show every glyph set as empty, so fall back to a
+  // representative value rather than an unreadable list.
+  const SAMPLE_PERCENT = 62.4;
+  let state = { sections: [], specs: [], values: [], open: null, filter: '', percent: SAMPLE_PERCENT, confirm: null };
   let post = () => {};
 
   api.init = (poster) => { post = poster; };
@@ -63,7 +67,7 @@
     if (payload.sections) { state.sections = payload.sections; }
     if (payload.specs) { state.specs = payload.specs; }
     if (payload.values) { state.values = payload.values; }
-    if (payload.percent != null) { state.percent = payload.percent; }
+    if (payload.percent != null) { state.percent = payload.percent > 0 ? payload.percent : SAMPLE_PERCENT; }
   };
   api.setOpen = (id) => { state.open = id; state.confirm = null; };
   api.openSection = () => state.open;

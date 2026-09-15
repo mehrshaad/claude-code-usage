@@ -220,18 +220,25 @@
         <span>${new Date(s.lastUpdate).toLocaleTimeString()}</span>
       </footer>` +
       (s.source !== 'account'
-        ? `<div class="notice">
-             <p class="empty">Limit percentages need the Claude Code sign-in on this machine. It is read automatically; if that fails you can paste a token instead.</p>
+        ? `<section class="rule notice">
+             <h2>Account</h2>
+             <p class="empty">Session and weekly limit percentages are computed by Claude and read from your account. The Claude Code sign-in on this machine is used automatically; if that read fails you can paste a token instead.</p>
              <div class="actions">
                <button type="button" data-command="claudeUsage.connect">Connect account</button>
                <button type="button" data-command="claudeUsage.diagnostics">Why not?</button>
+               <button type="button" class="linkish" data-link="usage">Usage on claude.ai ↗</button>
              </div>
-           </div>`
+           </section>`
         : '');
 
     for (const button of root.querySelectorAll('button[data-command]')) {
       button.addEventListener('click', () => {
         vscode.postMessage({ type: 'command', id: button.dataset.command });
+      });
+    }
+    for (const button of root.querySelectorAll('button[data-link]')) {
+      button.addEventListener('click', () => {
+        vscode.postMessage({ type: 'openLink', link: button.dataset.link });
       });
     }
   }

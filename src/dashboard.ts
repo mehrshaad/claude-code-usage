@@ -35,6 +35,15 @@ export class DashboardView implements vscode.WebviewViewProvider {
         return;
       }
       if (msg?.type === 'closeSettings') { this.setSettingsView(false); return; }
+      if (msg?.type === 'openLink') {
+        const targets: Record<string, string> = {
+          usage: 'https://claude.ai/settings/usage',
+          docs: 'https://github.com/mehrshaad/claude-code-usage#where-the-percentages-come-from'
+        };
+        const url = targets[String(msg.link)];
+        if (url) { void vscode.env.openExternal(vscode.Uri.parse(url)); }
+        return;
+      }
       this.onAction?.(msg as Record<string, unknown>);
     });
   }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.3
+
+- Meter style previews rendered as empty glyph runs. They preview at your real percentage, which is 0 with no account connected, so every style showed as all-empty and the list was unreadable. They now fall back to a representative value
+- Changing the status bar metric in settings did nothing once the Cycle Status Bar Metric command had been used. The cycle override outlived every later configuration change; an explicit setting now wins
+- The account notice has a heading like every other block, says plainly what the percentages are for, and links out to your usage page on claude.ai
+- Title bar icons replaced with VS Code's own codicons. The dial glyphs did not survive 16px as flat images and read as broken circles
+
 ## 0.6.2
 
 - Fixed the refresh and settings icons rendering black. VS Code loads title bar icons as images, where `currentColor` has nothing to inherit and resolves to black - so both were near-invisible on dark themes. They now ship as explicit light and dark variants

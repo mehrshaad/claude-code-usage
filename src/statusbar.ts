@@ -130,11 +130,16 @@ export class StatusBar {
     // Only alignment and priority are fixed at creation time. Rebuilding for any
     // other setting disposes a live item and can leave the status bar empty, so
     // everything else is applied in place.
+    const previous = this.cfg.statusBar;
     const recreate =
       !this.item ||
-      cfg.statusBar.alignment !== this.cfg.statusBar.alignment ||
-      cfg.statusBar.priority !== this.cfg.statusBar.priority;
+      cfg.statusBar.alignment !== previous.alignment ||
+      cfg.statusBar.priority !== previous.priority;
+    // An explicit setting wins over a previous cycle, otherwise changing the
+    // metric in settings would silently do nothing for the rest of the session.
+    const metricChanged = cfg.statusBar.metric !== previous.metric;
     this.cfg = cfg;
+    if (metricChanged) { this.metricOverride = undefined; }
     if (recreate) { this.build(); } else { this.apply(); }
     this.render();
   }
