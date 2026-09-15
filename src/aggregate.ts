@@ -85,16 +85,24 @@ export function currentBlock(events: UsageEvent[], now: number, blockHours: numb
 
 /**
  * Counted-token ceilings. These are estimates: Anthropic publishes limits as
- * percentages, never token counts. The Max 20x figures are back-calculated from
- * one measured account (68.45M counted tokens reported as 7% of a session,
- * 846M as 26% of a week); the others are scaled from it by plan multiple. They
- * exist so the meter works without an account, and every percentage derived
- * from them is marked as estimated.
+ * percentages, never token counts.
+ *
+ * Back-calculated from a measured Max 20x account: a session holding 159M
+ * counted tokens reported 60% used, and a week holding 1.82B reported 38%.
+ * The other plans are scaled by plan multiple.
+ *
+ * An earlier calibration used a session measurement taken before the block
+ * anchor was fixed, so it spanned part of the previous window and produced a
+ * ceiling roughly 3.7x too high - the meter then read 16% where the truth was
+ * 60%. Treat any single observation with suspicion: the weighting Anthropic
+ * applies is not public, and cache reads in particular appear to count for far
+ * less than they contribute to these totals, so the right ceiling varies with
+ * the shape of the traffic. Claude Usage: Calibrate exists for exactly this.
  */
 export const PLAN_PRESETS: Record<string, { block: number; week: number }> = {
-  pro: { block: 49_000_000, week: 163_000_000 },
-  max5: { block: 245_000_000, week: 813_000_000 },
-  max20: { block: 978_000_000, week: 3_250_000_000 }
+  pro: { block: 13_250_000, week: 239_000_000 },
+  max5: { block: 66_250_000, week: 1_197_000_000 },
+  max20: { block: 265_000_000, week: 4_790_000_000 }
 };
 
 /**

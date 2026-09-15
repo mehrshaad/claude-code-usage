@@ -34,13 +34,14 @@ export function formatTokens(n: number): string {
 }
 
 /**
- * Always NhNNm. A fixed shape is the point: the status bar item must not change
- * width as the countdown loses a digit.
+ * NhNNm while there is an hour to show, plain minutes below that. Dropping the
+ * leading 0h costs two characters of width once an hour, which is a better
+ * trade than reading "0h35m" for the rest of every window.
  */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 60_000));
   const h = Math.floor(total / 60);
-  return `${h}h${String(total % 60).padStart(2, '0')}m`;
+  return h > 0 ? `${h}h${String(total % 60).padStart(2, '0')}m` : `${total}m`;
 }
 
 /** Percentages reserve three integer digits so the meter never shifts. */

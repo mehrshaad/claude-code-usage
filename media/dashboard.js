@@ -11,7 +11,8 @@
   // Always NhNNm, so a countdown losing a digit never reflows the row.
   const dur = (ms) => {
     const t = Math.max(0, Math.floor(ms / 60000));
-    return Math.floor(t / 60) + 'h' + String(t % 60).padStart(2, '0') + 'm';
+    const h = Math.floor(t / 60);
+    return h > 0 ? h + 'h' + String(t % 60).padStart(2, '0') + 'm' : t + 'm';
   };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const shortModel = (m) => m.replace(/^claude-/, '');

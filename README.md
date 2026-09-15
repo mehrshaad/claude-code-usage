@@ -64,7 +64,7 @@ If no sign-in can be found (or the store is unreadable), **Claude Usage: Paste A
 
 The meter works without connecting anything. With no account, percentages are estimated against a plan ceiling and shown with a tilde — `~14%` — so an estimate never reads as a measurement. `claudeUsage.plan` picks the ceiling; `auto` infers your plan from the largest block this machine has reached.
 
-Be clear about what these are worth: Anthropic publishes limits as percentages, never as token counts, so any token-based ceiling is a model. The presets here are back-calculated from one measured account (68.45M counted tokens reported as 7% of a session, 846M as 26% of a week) rather than guessed, and they reproduce that account's readings to within a rounding error — but a plan whose real ceiling differs will read proportionally wrong. Connect your account and the tilde disappears along with the guesswork.
+Be clear about what these are worth: Anthropic publishes limits as percentages, never as token counts, so any token-based ceiling is a model. The presets here are back-calculated from a measured account — 159M counted tokens reported as 60% of a session, 1.82B as 38% of a week — rather than guessed. They are still only as good as that one observation: the weighting Anthropic applies is not public, and cache reads appear to count for far less toward a limit than they contribute to these totals, so an account whose traffic has a different shape will read proportionally wrong. **Claude Usage: Calibrate Estimate from /usage** fixes that in ten seconds: enter the percentage Claude Code reports and the ceiling is derived from the tokens counted here. Connect your account and the tilde disappears along with the guesswork.
 
 Without a sign-in the extension still works — tokens, cost, burn rate, per-model and per-session breakdowns, all local — but it shows **no percentage**, rather than a fabricated one. If you want a meter anyway, set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` to ceilings of your own choosing.
 
@@ -119,6 +119,7 @@ Full list with descriptions: **Settings → Extensions → Claude Code Usage Met
 | `Claude Usage: Remove Pasted Token` | Forget a pasted token |
 | `Claude Usage: Toggle Cost Display` | Show or hide dollar figures |
 | `Claude Usage: Copy Stats to Clipboard` | Copy the current summary |
+| `Claude Usage: Calibrate Estimate from /usage` | Derive the ceiling from a percentage Claude reports |
 | `Claude Usage: Full Rescan (clear cache)` | Rebuild from disk |
 
 ## Privacy

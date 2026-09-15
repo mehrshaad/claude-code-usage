@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+- Recalibrated the plan ceilings. The previous figures came from a session measurement taken before the block anchor was fixed, so it spanned part of the previous window and produced a ceiling about 3.7x too high - the meter read ~16% where Claude reported 60%. The new figures come from a clean reading: 159M counted tokens at 60% of a session, 1.82B at 38% of a week
+- Added **Claude Usage: Calibrate Estimate from /usage**. Enter the percentage Claude Code reports and the ceiling is derived from the tokens counted here, so the estimate can be corrected without waiting for someone else's measurement
+- Durations under an hour drop the hour field: `35m` rather than `0h35m`
+
 ## 0.9.1
 
 - The mascot and the meter ticks sat low in the status bar. VS Code's codicon font draws every glyph entirely above the baseline, filling ~94% of the em with ascent = upem and descent = 0; this font hung 60 units below the baseline and topped out at 70%, so its glyphs sat lower and read smaller than the icons beside them. The metrics now match codicon's, and the mascot and tick cells share one vertical centre

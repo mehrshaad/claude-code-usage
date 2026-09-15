@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -125,6 +125,11 @@
         "title": "Settings",
         "category": "Claude Usage",
         "icon": "$(gear)"
+      },
+      {
+        "command": "claudeUsage.calibrate",
+        "title": "Calibrate Estimate from /usage",
+        "category": "Claude Usage"
       }
     ],
     "menus": {

@@ -250,6 +250,27 @@ export function activate(context: vscode.ExtensionContext): void {
       channel.appendLine(lines.join('\n'));
       channel.show(true);
     }),
+    vscode.commands.registerCommand('claudeUsage.calibrate', async () => {
+      if (!snapshot) { return; }
+      const ask = async (label: string, counted: number, key: string) => {
+        const entered = await vscode.window.showInputBox({
+          title: `Calibrate ${label}`,
+          prompt: `Claude Code's /usage shows a percentage for the ${label}. Enter it and the ceiling is derived from the ${formatTokens(counted)} tokens counted here. Leave empty to skip.`,
+          validateInput: (text) => {
+            if (!text.trim()) { return undefined; }
+            const n = Number(text.replace('%', ''));
+            return Number.isFinite(n) && n > 0 && n <= 100 ? undefined : 'Enter a percentage between 1 and 100';
+          }
+        });
+        if (entered === undefined || !entered.trim()) { return; }
+        const percent = Number(entered.replace('%', ''));
+        await writeSetting(key, Math.round(counted / (percent / 100)));
+      };
+      await ask('session', snapshot.block.totals.counted, 'blockTokenLimit');
+      await ask('week', snapshot.week.totals.counted, 'weeklyTokenLimit');
+      await refresh();
+      void vscode.window.showInformationMessage('Claude usage: ceilings calibrated from your own reading.');
+    }),
     vscode.commands.registerCommand('claudeUsage.rescan', async () => {
       scanner.reset();
       statusBar.setScanning();
