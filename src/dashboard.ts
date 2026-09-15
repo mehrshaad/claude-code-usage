@@ -19,7 +19,11 @@ export class DashboardView implements vscode.WebviewViewProvider {
     };
     view.webview.html = this.html(view.webview);
     view.webview.onDidReceiveMessage((msg) => {
-      if (msg?.type === 'ready') { this.post(); }
+      if (msg?.type === 'ready') { this.post(); return; }
+      // Only this extension's own commands may be invoked from the webview.
+      if (msg?.type === 'command' && typeof msg.id === 'string' && msg.id.startsWith('claudeUsage.')) {
+        void vscode.commands.executeCommand(msg.id);
+      }
     });
   }
 

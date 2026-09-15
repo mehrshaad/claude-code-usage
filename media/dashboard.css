@@ -186,6 +186,21 @@ footer {
 
 .empty { margin: 0; font-size: 11px; color: var(--dim); line-height: 1.5; }
 
+.notice { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+.actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.actions button {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+}
+.actions button:hover { border-color: var(--accent); color: var(--accent); }
+.actions button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+
 /* Scanning keeps the full skeleton, so nothing reflows when real data lands. */
 .scanning .gauge-name { animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6
+
+- Fixed the panel telling you to run a command that no longer existed. 0.4.0 renamed Connect Account to "Paste Account Token (fallback)" but the panel kept naming the old title, so searching the command palette for it found nothing. The command is called Connect Account again
+- The panel now offers buttons instead of instructions: Connect account, and "Why not?" which opens the diagnostics
+- Clarified the wording: the Claude Code sign-in is read automatically, and pasting a token is the fallback when that read fails
+
 ## 0.5.5
 
 - Fixed the status bar vanishing after a settings change. Every change recreated the status bar item, and disposing a live item to immediately recreate it under the same id could leave the bar empty until the next poll. Only alignment and priority need a rebuild now; everything else is applied in place

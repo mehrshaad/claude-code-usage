@@ -263,7 +263,7 @@ export class StatusBar {
       md.appendMarkdown('\n\n');
     }
     if (snap.source === 'transcripts') {
-      md.appendMarkdown('---\n\n$(info) Percentages need your account: run **Claude Usage: Connect Account**\n\n');
+      md.appendMarkdown('---\n\n$(info) Percentages need your Claude sign-in. Open the dashboard to connect or diagnose.\n\n');
     }
     md.appendMarkdown('---\n\n$(graph) Click to open the dashboard');
     return md;

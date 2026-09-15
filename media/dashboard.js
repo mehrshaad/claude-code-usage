@@ -220,8 +220,20 @@
         <span>${new Date(s.lastUpdate).toLocaleTimeString()}</span>
       </footer>` +
       (s.source !== 'account'
-        ? '<p class="empty" style="margin-top:8px">Limit percentages need your account — run <b>Claude Usage: Connect Account</b>.</p>'
+        ? `<div class="notice">
+             <p class="empty">Limit percentages need the Claude Code sign-in on this machine. It is read automatically; if that fails you can paste a token instead.</p>
+             <div class="actions">
+               <button type="button" data-command="claudeUsage.connect">Connect account</button>
+               <button type="button" data-command="claudeUsage.diagnostics">Why not?</button>
+             </div>
+           </div>`
         : '');
+
+    for (const button of root.querySelectorAll('button[data-command]')) {
+      button.addEventListener('click', () => {
+        vscode.postMessage({ type: 'command', id: button.dataset.command });
+      });
+    }
   }
 
   window.addEventListener('message', (event) => {
