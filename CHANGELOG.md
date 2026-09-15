@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.5
+
+- Fixed the status bar vanishing after a settings change. Every change recreated the status bar item, and disposing a live item to immediately recreate it under the same id could leave the bar empty until the next poll. Only alignment and priority need a rebuild now; everything else is applied in place
+- Added `claudeUsage.dashboard.numberFont`. Numbers use the editor font for tabular figures, which can clash with the interface font used by the labels; set it to `ui` for one typeface throughout
+
 ## 0.5.4
 
 - The default meter is now half-step blocks. The circle styles mix Unicode blocks - `○` (U+25CB), `●` (U+25CF) and the quadrant glyphs `◔◑◕` (U+25D1-25D5) - and many editor fonts draw them at different sizes and advance widths, so the meter visibly changed size as it filled. Block elements share one advance width everywhere. The circle styles remain available

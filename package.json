@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -459,6 +459,19 @@
             "Circular ring, reads the window as a clock"
           ],
           "description": "Shape of the session gauge in the panel."
+        },
+        "claudeUsage.dashboard.numberFont": {
+          "type": "string",
+          "enum": [
+            "editor",
+            "ui"
+          ],
+          "default": "editor",
+          "enumDescriptions": [
+            "Your editor font - tabular figures, matches code",
+            "The VS Code interface font - matches the labels around it"
+          ],
+          "description": "Font used for numbers in the panel. Labels always use the interface font."
         }
       }
     }

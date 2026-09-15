@@ -100,11 +100,19 @@ export class StatusBar {
       sb.alignment === 'left' ? vscode.StatusBarAlignment.Left : vscode.StatusBarAlignment.Right,
       sb.priority
     );
-    this.item.name = 'Claude Usage';
-    this.item.command = sb.clickAction === 'none' ? undefined : `claudeUsage.${
+    this.apply();
+  }
+
+  /** Properties that can change without recreating the item. */
+  private apply(): void {
+    const item = this.item;
+    if (!item) { return; }
+    const sb = this.cfg.statusBar;
+    item.name = 'Claude Usage';
+    item.command = sb.clickAction === 'none' ? undefined : `claudeUsage.${
       sb.clickAction === 'openDashboard' ? 'openDashboard' : sb.clickAction
     }`;
-    if (sb.enabled) { this.item.show(); }
+    if (sb.enabled) { item.show(); } else { item.hide(); }
   }
 
   get metric(): Config['statusBar']['metric'] {
@@ -119,8 +127,15 @@ export class StatusBar {
   }
 
   updateConfig(cfg: Config): void {
+    // Only alignment and priority are fixed at creation time. Rebuilding for any
+    // other setting disposes a live item and can leave the status bar empty, so
+    // everything else is applied in place.
+    const recreate =
+      !this.item ||
+      cfg.statusBar.alignment !== this.cfg.statusBar.alignment ||
+      cfg.statusBar.priority !== this.cfg.statusBar.priority;
     this.cfg = cfg;
-    this.build();
+    if (recreate) { this.build(); } else { this.apply(); }
     this.render();
   }
 

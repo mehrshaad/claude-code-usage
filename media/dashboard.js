@@ -199,6 +199,14 @@
     const money = (v) => (s.costEnabled ? cur + v.toFixed(2) : '');
     const state = { warn: s.warnThreshold, danger: s.dangerThreshold };
     document.documentElement.style.setProperty('--accent', s.accentColor);
+    // Numbers default to the editor font for tabular figures; the UI font is
+    // available for anyone whose editor font clashes with the labels.
+    document.documentElement.style.setProperty(
+      '--mono',
+      s.numberFont === 'ui'
+        ? 'var(--vscode-font-family)'
+        : 'var(--vscode-editor-font-family, ui-monospace, monospace)'
+    );
 
     root.innerHTML =
       (s.gaugeStyle === 'ring' ? ringGauge(s, state, cur) : blockGauge(s, state, cur)) +

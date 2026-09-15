@@ -50,6 +50,7 @@ export interface Config {
     showModels: boolean;
     showHistory: boolean;
     gaugeStyle: 'bar' | 'ring';
+    numberFont: 'editor' | 'ui';
     accentColor: string;
   };
   notifications: { enabled: boolean; thresholds: number[] };
@@ -106,6 +107,7 @@ export function readConfig(): Config {
       showModels: g('dashboard.showModels', true),
       showHistory: g('dashboard.showHistory', true),
       gaugeStyle: g('dashboard.gaugeStyle', 'bar'),
+      numberFont: g('dashboard.numberFont', 'editor'),
       accentColor: g('dashboard.accentColor', '#D97757')
     },
     notifications: {
