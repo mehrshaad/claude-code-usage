@@ -1,11 +1,15 @@
 import * as vscode from 'vscode';
 import type { Config } from './config';
 import type { Snapshot, Totals } from './types';
+import { SECTIONS, SETTINGS, readState } from './settings';
 
 export class DashboardView implements vscode.WebviewViewProvider {
   public static readonly viewType = 'claudeUsage.dashboard';
 
   private view: vscode.WebviewView | undefined;
+  private settingsOpen = false;
+  /** Set by the extension so webview actions can be executed with context. */
+  public onAction: ((message: Record<string, unknown>) => void) | undefined;
   private latest: Snapshot | undefined;
   private allTime: Totals | undefined;
 
@@ -19,17 +23,45 @@ export class DashboardView implements vscode.WebviewViewProvider {
     };
     view.webview.html = this.html(view.webview);
     view.webview.onDidReceiveMessage((msg) => {
-      if (msg?.type === 'ready') { this.post(); return; }
+      if (msg?.type === 'ready') {
+        this.post();
+        this.postSettings();
+        void this.view?.webview.postMessage({ type: 'view', view: this.settingsOpen ? 'settings' : 'meter' });
+        return;
+      }
       // Only this extension's own commands may be invoked from the webview.
       if (msg?.type === 'command' && typeof msg.id === 'string' && msg.id.startsWith('claudeUsage.')) {
         void vscode.commands.executeCommand(msg.id);
+        return;
       }
+      if (msg?.type === 'closeSettings') { this.setSettingsView(false); return; }
+      this.onAction?.(msg as Record<string, unknown>);
     });
   }
 
   updateConfig(cfg: Config): void {
     this.cfg = cfg;
     this.post();
+    this.postSettings();
+  }
+
+  get isSettingsOpen(): boolean {
+    return this.settingsOpen;
+  }
+
+  setSettingsView(open: boolean): void {
+    this.settingsOpen = open;
+    void this.view?.webview.postMessage({ type: 'view', view: open ? 'settings' : 'meter' });
+  }
+
+  postSettings(): void {
+    if (!this.view) { return; }
+    void this.view.webview.postMessage({
+      type: 'settings',
+      sections: SECTIONS,
+      specs: SETTINGS,
+      values: readState()
+    });
   }
 
   update(snapshot: Snapshot, allTime: Totals): void {
@@ -71,6 +103,8 @@ export class DashboardView implements vscode.WebviewViewProvider {
   private html(webview: vscode.Webview): string {
     const nonce = String(Math.random()).slice(2) + Date.now().toString(36);
     const css = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'dashboard.css'));
+    const settingsCss = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'settings.css'));
+    const settingsJs = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'settings.js'));
     const js = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'dashboard.js'));
     return `<!DOCTYPE html>
 <html lang="en">
@@ -79,9 +113,12 @@ export class DashboardView implements vscode.WebviewViewProvider {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="${css}" rel="stylesheet">
+<link href="${settingsCss}" rel="stylesheet">
 <title>Claude Usage</title>
 </head>
-<body><div id="root"></div><script nonce="${nonce}" src="${js}"></script></body>
+<body><div id="root"></div>
+<script nonce="${nonce}" src="${settingsJs}"></script>
+<script nonce="${nonce}" src="${js}"></script></body>
 </html>`;
   }
 }

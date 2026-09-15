@@ -10,6 +10,7 @@ import { StatusBar, formatTokens } from './statusbar';
 import { UsageApi, lastKeychainError } from './usageApi';
 import type { UsageReport } from './usageApi';
 import type { Snapshot, Totals } from './types';
+import { resetSetting, writeSetting } from './settings';
 
 export function activate(context: vscode.ExtensionContext): void {
   let cfg = readConfig();
@@ -118,11 +119,75 @@ export function activate(context: vscode.ExtensionContext): void {
     }, 1000);
   }
 
+  // Actions posted by the settings surface in the webview.
+  dashboard.onAction = (message) => {
+    void (async () => {
+      const key = typeof message.key === 'string' ? message.key : undefined;
+      switch (message.type) {
+        case 'set':
+          if (key) { await writeSetting(key, message.value); }
+          break;
+        case 'reset':
+          if (key) { await resetSetting(key); }
+          break;
+        case 'resetMany':
+          for (const k of (message.keys as string[] | undefined) ?? []) { await resetSetting(k); }
+          break;
+        case 'openJson':
+          await vscode.commands.executeCommand('workbench.action.openSettingsJson');
+          break;
+        case 'pickFolder': {
+          const picked = await vscode.window.showOpenDialog({
+            canSelectFolders: true, canSelectFiles: false, canSelectMany: false,
+            title: 'Claude data directory', openLabel: 'Use this folder'
+          });
+          if (picked?.[0]) { await writeSetting('claudeDir', picked[0].fsPath); }
+          break;
+        }
+        case 'promptNumber': {
+          const entered = await vscode.window.showInputBox({
+            title: 'Add a threshold',
+            prompt: 'Warn at this percentage of the session limit',
+            validateInput: (text) => {
+              const n = Number(text);
+              return Number.isFinite(n) && n >= 1 && n <= 100 ? undefined : 'Enter a number between 1 and 100';
+            }
+          });
+          if (entered && key) {
+            const current = vscode.workspace.getConfiguration('claudeUsage').get<number[]>(key) ?? [];
+            await writeSetting(key, [...new Set([...current, Number(entered)])].sort((a, b) => a - b));
+          }
+          break;
+        }
+        case 'setRate': {
+          const model = String(message.model);
+          const field = String(message.field);
+          const pricing = { ...(vscode.workspace.getConfiguration('claudeUsage').get<Record<string, Record<string, number>>>('cost.pricing') ?? {}) };
+          const rates = { ...(pricing[model] ?? {}) };
+          if (message.value === null || !Number.isFinite(Number(message.value))) {
+            delete rates[field];
+          } else {
+            rates[field] = Number(message.value);
+          }
+          if (Object.keys(rates).length) { pricing[model] = rates; } else { delete pricing[model]; }
+          await writeSetting('cost.pricing', pricing);
+          break;
+        }
+        default:
+          break;
+      }
+    })();
+  };
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(DashboardView.viewType, dashboard, {
       webviewOptions: { retainContextWhenHidden: true }
     }),
     vscode.commands.registerCommand('claudeUsage.openDashboard', () => dashboard.reveal()),
+    vscode.commands.registerCommand('claudeUsage.toggleSettings', () => {
+      dashboard.reveal();
+      dashboard.setSettingsView(!dashboard.isSettingsOpen);
+    }),
     vscode.commands.registerCommand('claudeUsage.refresh', async () => {
       await refreshAccount();
       await refresh();

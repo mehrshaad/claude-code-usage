@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0
+
+All 46 settings are now editable in the sidebar, implementing the settings design.
+
+- Two-level drill-down: seven section rows fit one screen at 300px, each showing how many settings it holds and how many differ from default. A filter matches both labels and dotted keys, so `countCacheReads` is findable by typing "cache"
+- The meter never leaves the column: opening settings collapses the gauge to a 30px strip keeping percent, bar and reset countdown, including its threshold colour
+- Live preview wherever a setting is visual: all eight meter styles render at your real percentage, the width slider shows the glyph run it is choosing, the gauge styles are two live miniatures, and the font choice renders the same token count in both faces
+- The four hard controls are real controls: per-model rate cards with an em-dash for inherited rates, threshold chips over a 0-100 scale, a path field with a folder picker, and four curated accent swatches with a hex field
+- A 2px gutter answers "is this mine?" for every row - coral for user-changed, grey for values held in settings.json, which are shown read-only with a tag that opens the file
+- Reset at three scopes (setting, section, everything) with inline confirmation, never a modal over a 300px column
+- Dependent settings indent with a hairline and dim to 45% when their parent is off; Status bar collapses to one line when disabled rather than showing fifteen dimmed rows
+- Refresh and settings icons redrawn on the logo's dial grid
+
 ## 0.5.6
 
 - Fixed the panel telling you to run a command that no longer existed. 0.4.0 renamed Connect Account to "Paste Account Token (fallback)" but the panel kept naming the old title, so searching the command palette for it found nothing. The command is called Connect Account again

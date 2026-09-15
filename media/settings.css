@@ -1,0 +1,205 @@
+/*
+ * Settings surface. Same system as the panel: theme variables only, coral as a
+ * marker never a fill behind text, zero radii, fixed control heights so a value
+ * arriving from settings.json changes glyphs inside reserved geometry.
+ */
+
+.surface { display: flex; flex-direction: column; }
+
+/* The meter never leaves the column: 30px strip keeping percent, bar, clock. */
+.strip { border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-bottom: 8px; }
+.strip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.strip-name { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim); }
+.strip-pct { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+.strip-pct.danger { color: var(--danger); }
+.strip .track { height: 4px; margin-top: 5px; }
+.strip-sub {
+  display: flex; justify-content: space-between; gap: 8px; margin-top: 4px;
+  font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 9.5px; color: var(--dim);
+}
+
+.secbar { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sectitle { font-size: 11px; font-weight: 600; flex: 1; }
+.back {
+  font: inherit; font-size: 14px; line-height: 1; background: none; border: 0;
+  color: var(--fg); cursor: pointer; padding: 0 4px;
+}
+.navmeta { font-size: 9.5px; color: var(--dim); }
+.navmeta b { color: var(--accent); font-weight: 400; }
+
+.filterrow { margin-bottom: 8px; }
+.filter {
+  width: 100%; height: 24px; box-sizing: border-box;
+  font-family: var(--vscode-font-family); font-size: 11px;
+  color: var(--fg); background: var(--vscode-input-background, transparent);
+  border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 0; padding: 0 6px;
+}
+
+.nav { display: flex; flex-direction: column; }
+.navrow {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 2px; background: none; border: 0; border-bottom: 1px solid var(--line);
+  color: var(--fg); font: inherit; font-size: 12px; text-align: left; cursor: pointer;
+}
+.navrow:hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.08)); }
+.navlabel { flex: 1; }
+.chev { color: var(--dim); }
+
+.rows { display: flex; flex-direction: column; }
+
+.row { display: flex; gap: 7px; padding: 7px 2px; border-bottom: 1px solid var(--line); }
+.row:hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.06)); }
+.row[data-depth="1"] { padding-left: 9px; border-left: 1px solid var(--line); margin-left: 2px; }
+.row[data-depth="2"] { padding-left: 18px; border-left: 1px solid var(--line); margin-left: 2px; }
+/* Dim, don't hide: the value stays legible and the count stays honest. */
+.row.dead { opacity: 0.45; }
+
+.gut { width: 2px; flex: none; background: transparent; }
+.gut.changed { background: var(--accent); }
+.gut.external { background: var(--dim); }
+
+.rowbody { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.rowhead { display: flex; align-items: baseline; gap: 6px; }
+.lbl { font-size: 11.5px; flex: 1; }
+.help { font-size: 9.5px; color: var(--dim); }
+.ctlwrap { display: flex; }
+.row:not(.wide) .rowbody { flex-direction: row; align-items: center; gap: 8px; }
+.row:not(.wide) .rowhead { flex: 1; }
+.row:not(.wide) .help { display: none; }
+
+.tag {
+  font-size: 9px; color: var(--dim); border: 1px solid var(--line);
+  padding: 0 4px; cursor: pointer; max-width: 96px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; direction: rtl;
+}
+.reset, .reset-slot { width: 13px; flex: none; text-align: center; }
+.reset { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 11px; padding: 0; opacity: 0; }
+.row:hover .reset, .reset:focus-visible { opacity: 1; }
+
+/* One focus pattern for all nine controls. */
+.surface :focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, var(--accent));
+  outline-offset: 2px;
+}
+
+.ctl {
+  height: 24px; box-sizing: border-box; font-family: var(--vscode-font-family); font-size: 11px;
+  color: var(--fg); background: var(--vscode-input-background, transparent);
+  border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 0; padding: 0 6px;
+}
+.ctl:hover { border-color: var(--dim); }
+.ctl:disabled { cursor: not-allowed; }
+select.ctl { min-width: 108px; }
+.numfield { width: 74px; font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
+.textfield { width: 56px; }
+.hexfield { width: 72px; font-family: var(--mono); }
+
+.sw {
+  width: 26px; height: 14px; flex: none; padding: 0; cursor: pointer;
+  background: transparent; border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 0;
+}
+.sw .knob { display: block; width: 8px; height: 8px; margin: 2px; background: var(--dim); transition: transform 120ms linear; }
+.sw.on { border-color: var(--accent); }
+.sw.on .knob { background: var(--accent); transform: translateX(12px); }
+
+.sliderwrap { display: flex; align-items: center; gap: 8px; width: 100%; }
+/* The glyph run is as wide as the width being chosen, so it takes its own line
+   rather than competing with the slider at 300px. */
+.widthwrap { display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap; }
+.widthwrap .preview { flex-basis: 100%; overflow: hidden; }
+.rng { flex: 1; accent-color: var(--accent); height: 14px; }
+.sliderwrap .num, .widthwrap .num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 11px;
+  color: var(--dim); width: 34px; text-align: right;
+}
+
+.glyphs { font-family: var(--mono); font-size: 12px; letter-spacing: 0; white-space: pre; }
+.preview { color: var(--accent); }
+
+.pathwrap { display: flex; width: 100%; }
+.pathfield { flex: 1; min-width: 0; font-family: var(--mono); font-size: 10.5px; text-align: left; }
+.mini {
+  width: 24px; height: 24px; flex: none; border: 1px solid var(--vscode-input-border, var(--line));
+  border-left: 0; background: transparent; color: var(--fg); cursor: pointer; border-radius: 0;
+}
+
+.swatches { display: flex; align-items: center; gap: 5px; }
+.sw-chip { width: 16px; height: 16px; border: 1px solid transparent; cursor: pointer; padding: 0; border-radius: 0; }
+.sw-chip.on { border-color: var(--fg); }
+
+.listwrap { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.chips { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 3px; font-family: var(--mono); font-size: 10.5px;
+  border: 1px solid var(--line); padding: 1px 3px 1px 5px;
+}
+.chip .x, .add {
+  background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 10px; padding: 0 2px;
+}
+.add { border: 1px solid var(--line); height: 18px; }
+.scale { position: relative; display: block; height: 6px; background: var(--track); }
+.scale i { position: absolute; top: 0; width: 2px; height: 6px; background: var(--accent); }
+.hint { font-size: 9.5px; color: var(--dim); }
+
+.pricing { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.card { border: 1px solid var(--line); padding: 5px 6px; }
+.card.builtin { opacity: 0.55; }
+.card-head { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); display: flex; justify-content: space-between; }
+.card-head em { font-style: normal; font-size: 9px; }
+.card .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 6px; margin-top: 4px; }
+.cell { display: flex; align-items: center; gap: 4px; }
+.cell i { font-style: normal; font-size: 9px; color: var(--dim); width: 22px; }
+.jsoncell {
+  height: 18px; width: 44px; box-sizing: border-box; font-family: var(--mono); font-size: 10.5px;
+  text-align: right; color: var(--fg); background: transparent;
+  border: 1px solid var(--vscode-input-border, var(--line)); border-radius: 0; padding: 0 3px;
+}
+
+.stylelist { display: flex; flex-direction: column; width: 100%; }
+.styleopt {
+  display: flex; align-items: baseline; gap: 6px; width: 100%; text-align: left;
+  background: none; border: 0; border-left: 2px solid transparent; color: var(--fg);
+  font: inherit; padding: 3px 4px; cursor: pointer;
+}
+.styleopt:hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.08)); }
+.styleopt.on { border-left-color: var(--accent); }
+.styleid { font-size: 10px; color: var(--dim); }
+.stylenote { font-size: 9px; color: var(--dim); margin-left: auto; }
+
+.gauges, .fonts { display: flex; gap: 6px; width: 100%; }
+.gaugeopt, .fontopt {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: 1px solid var(--line); color: var(--fg); font: inherit;
+  padding: 6px 4px; cursor: pointer; border-radius: 0;
+}
+.gaugeopt.on, .fontopt.on { border-color: var(--accent); }
+.fontopt b { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.mini-bar { display: block; width: 100%; height: 4px; background: var(--track); }
+.mini-bar i { display: block; height: 100%; background: var(--accent); }
+.mini-track { fill: none; stroke: var(--track); stroke-width: 4; }
+.mini-fill { fill: none; stroke: var(--accent); stroke-width: 4; }
+
+.hit { display: flex; flex-direction: column; }
+.hitsec { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); padding-top: 6px; }
+
+.collapsed {
+  width: 100%; text-align: left; background: none; border: 0; color: var(--dim);
+  font: inherit; font-size: 10.5px; padding: 8px 2px; cursor: pointer;
+}
+
+.surface-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding-top: 8px; font-size: 9.5px; color: var(--dim);
+}
+.linkish { background: none; border: 0; color: var(--accent); font: inherit; font-size: 10px; cursor: pointer; padding: 0; }
+.confirm { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; }
+.confirm .yes { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; }
+.confirm .no { background: none; border: 0; color: var(--dim); font: inherit; cursor: pointer; }
+
+/* Reflow: labels and controls never shrink; captions and notes drop. */
+@media (max-width: 260px) {
+  .stylenote, .hitsec, .navmeta b { display: none; }
+}
+@media (min-width: 380px) {
+  .row { padding-top: 8px; padding-bottom: 8px; }
+}

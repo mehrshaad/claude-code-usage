@@ -236,10 +236,68 @@
     }
   }
 
+  // --- view switching: the meter panel, or the settings surface over it ------
+
+  let latest = null;
+  let view = 'meter';
+
+  // Settings never take the whole column: the gauge collapses to a strip that
+  // keeps the three things the panel is open for - percent, bar, reset clock.
+  function strip(s) {
+    if (!s) { return ''; }
+    const w = s.block;
+    const has = shown(w);
+    const state = { warn: s.warnThreshold, danger: s.dangerThreshold };
+    const cls = level(w.percent, state);
+    return `<div class="strip">
+      <div class="strip-head">
+        <span class="strip-name">Session</span>
+        <span class="strip-pct num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+      </div>
+      ${has ? `<div class="track"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
+      <div class="strip-sub"><span>${fmt(w.totals.counted)} tok</span><span>resets in ${dur(w.remainingMs)}</span></div>
+    </div>`;
+  }
+
+  function paint(keepFocus) {
+    if (view === 'settings') {
+      root.innerHTML = strip(latest) + '<div class="surface">' + window.ccmSettings.render() + '</div>';
+      if (keepFocus === 'filter') {
+        const field = root.querySelector('.filter');
+        if (field) { field.focus(); field.setSelectionRange(field.value.length, field.value.length); }
+      }
+    } else {
+      render(latest);
+    }
+  }
+
+  window.ccmSettings.init((message) => {
+    if (message.type === 'rerender') { paint(message.keepFocus); return; }
+    vscode.postMessage(message);
+  });
+  window.ccmSettings.bind(root);
+
   window.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'snapshot') { render(event.data.snapshot); }
+    const data = event.data;
+    if (!data) { return; }
+    if (data.type === 'snapshot') {
+      latest = data.snapshot;
+      window.ccmSettings.update({ percent: data.snapshot.block && data.snapshot.block.percent });
+      paint();
+    } else if (data.type === 'settings') {
+      window.ccmSettings.update(data);
+      if (view === 'settings') { paint(); }
+    } else if (data.type === 'view') {
+      view = data.view;
+      if (view === 'meter') { window.ccmSettings.setOpen(null); }
+      paint();
+    }
   });
 
-  render(null);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && view === 'settings') { vscode.postMessage({ type: 'closeSettings' }); }
+  });
+
+  paint();
   vscode.postMessage({ type: 'ready' });
 })();
