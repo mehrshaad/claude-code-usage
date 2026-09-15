@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -253,7 +253,7 @@
             "ascii",
             "sparkline"
           ],
-          "default": "circles",
+          "default": "halfblocks",
           "enumDescriptions": [
             "Spaced ticks - \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
             "Circle steps - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d4\u25cb\u25cb\u25cb, quarter-resolved cells (2.5% steps)",
@@ -264,7 +264,7 @@
             "Bracketed ASCII - [======----], renders anywhere",
             "Burn-rate sparkline instead of a fill"
           ],
-          "markdownDescription": "Meter glyph style. `circles` resolves four times finer than the block meters; if the quadrant glyphs render at the wrong width in your editor font, use `circleHalves`."
+          "markdownDescription": "Meter glyph style. `halfblocks` is the default because block elements share one advance width in every monospace font. The circle styles resolve finer (2.5% per cell) but mix Unicode blocks - `\u25cb` `\u25cf` `\u25d4` are not metrically compatible in many editor fonts and can render at visibly different sizes."
         },
         "claudeUsage.statusBar.showPercent": {
           "type": "boolean",

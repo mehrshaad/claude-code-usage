@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.4
+
+- The default meter is now half-step blocks. The circle styles mix Unicode blocks - `○` (U+25CB), `●` (U+25CF) and the quadrant glyphs `◔◑◕` (U+25D1-25D5) - and many editor fonts draw them at different sizes and advance widths, so the meter visibly changed size as it filled. Block elements share one advance width everywhere. The circle styles remain available
+
 ## 0.5.2
 
 - Fixed the release workflow: the publish step's condition read `env.VSCE_PAT`, which a step's own `env` block does not populate, so it skipped on every tag. The token now lives at job level
