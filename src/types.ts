@@ -29,8 +29,10 @@ export interface Window {
   totals: Totals;
   limit: number;
   percent: number;
-  /** False when no authoritative percentage exists - render tokens, not a meter. */
+  /** False when no percentage exists at all - render tokens, not a meter. */
   hasPercent: boolean;
+  /** True when the percentage is measured against a limit rather than reported. */
+  estimated: boolean;
   remainingMs: number;
 }
 
@@ -69,6 +71,11 @@ export interface Snapshot {
   lastUpdate: number;
   costEnabled: boolean;
   source: 'account' | 'transcripts';
+  /** Denominators in force, for the panel footer. */
+  blockLimit: number;
+  weekLimit: number;
+  /** Plan actually in force, after inference. */
+  plan: string;
   opusWeek: number | undefined;
   sonnetWeek: number | undefined;
 }

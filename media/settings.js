@@ -57,7 +57,8 @@
   // that is 0, which would show every glyph set as empty, so fall back to a
   // representative value rather than an unreadable list.
   const SAMPLE_PERCENT = 62.4;
-  let state = { sections: [], specs: [], values: [], open: null, filter: '', percent: SAMPLE_PERCENT, confirm: null };
+  let state = { sections: [], specs: [], values: [], open: null, filter: '', percent: SAMPLE_PERCENT, confirm: null,
+    runtime: { source: 'transcripts', hasPercent: false, costOn: true } };
   let post = () => {};
 
   api.init = (poster) => { post = poster; };
@@ -67,6 +68,7 @@
     if (payload.sections) { state.sections = payload.sections; }
     if (payload.specs) { state.specs = payload.specs; }
     if (payload.values) { state.values = payload.values; }
+    if (payload.runtime) { state.runtime = payload.runtime; }
     if (payload.percent != null) { state.percent = payload.percent > 0 ? payload.percent : SAMPLE_PERCENT; }
   };
   api.setOpen = (id) => { state.open = id; state.confirm = null; };
@@ -78,6 +80,12 @@
 
   /** A row is inert when its parent is off, or set to a value it does not apply to. */
   function inert(spec) {
+    // Runtime rules first: a setting that cannot affect anything right now is
+    // dead regardless of how its parent is set.
+    const rt = state.runtime || {};
+    if (spec.dimIf === 'account' && rt.source === 'account') { return true; }
+    if (spec.dimIf === 'noPercent' && !rt.hasPercent) { return true; }
+    if (spec.dimIf === 'costOff' && !rt.costOn) { return true; }
     if (!spec.parent) { return false; }
     const parent = valueOf(spec.parent);
     if (spec.parentNot !== undefined) { return parent === spec.parentNot; }
@@ -285,7 +293,7 @@
 
   function filterRow() {
     return `<div class="filterrow">
-      <input class="filter" type="search" placeholder="Filter 46 settings" value="${esc(state.filter)}" data-act="filter">
+      <input class="filter" type="search" placeholder="Filter ${state.specs.length} settings" value="${esc(state.filter)}" data-act="filter">
     </div>`;
   }
 

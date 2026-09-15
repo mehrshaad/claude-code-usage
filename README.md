@@ -60,6 +60,12 @@ So percentages come from your account, the same source `/usage` reads — using 
 
 If no sign-in can be found (or the store is unreadable), **Claude Usage: Paste Account Token** takes a token from `claude setup-token` and keeps it in VS Code's encrypted secret storage.
 
+### Estimates without an account
+
+The meter works without connecting anything. With no account, percentages are estimated against a plan ceiling and shown with a tilde — `~14%` — so an estimate never reads as a measurement. `claudeUsage.plan` picks the ceiling; `auto` infers your plan from the largest block this machine has reached.
+
+Be clear about what these are worth: Anthropic publishes limits as percentages, never as token counts, so any token-based ceiling is a model. The presets here are back-calculated from one measured account (68.45M counted tokens reported as 7% of a session, 846M as 26% of a week) rather than guessed, and they reproduce that account's readings to within a rounding error — but a plan whose real ceiling differs will read proportionally wrong. Connect your account and the tilde disappears along with the guesswork.
+
 Without a sign-in the extension still works — tokens, cost, burn rate, per-model and per-session breakdowns, all local — but it shows **no percentage**, rather than a fabricated one. If you want a meter anyway, set `claudeUsage.blockTokenLimit` and `claudeUsage.weeklyTokenLimit` to ceilings of your own choosing.
 
 Costs use the published per-million-token API rates, including cache write and read multipliers. On a subscription the dollar figure is notional — what the same traffic would cost on the API. Turn it off with `claudeUsage.cost.enabled`, or override rates per model with `claudeUsage.cost.pricing`.

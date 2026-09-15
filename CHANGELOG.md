@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.0
+
+The meter no longer needs a connected account.
+
+- Percentages are estimated against a plan ceiling when the account is unavailable, and marked with a tilde (`~14%`) everywhere they appear so an estimate never reads as a measurement
+- `claudeUsage.plan` selects the ceiling. `auto`, the default, infers the plan from the largest block this machine has reached - calibrating directly to that peak was rejected, since the heaviest window would then always read 100%
+- The presets are back-calculated from a measured account rather than guessed, and reproduce its readings to within rounding. 0.1.0's invented ceiling is what produced the 61%-versus-7% error; this is the same feature built on measurement
+- Settings that cannot affect anything in the current state are now dimmed, including across sections and from runtime state: the plan and token ceilings while the account reports real numbers, the meter and threshold settings while no percentage exists at all, and the status bar's cost toggle while cost display is off
+
 ## 0.6.4
 
 - The status bar item can no longer render as an empty string, which shows as no item at all. Whatever the combination of settings, it falls back to the token count

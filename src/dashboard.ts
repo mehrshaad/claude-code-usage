@@ -69,14 +69,23 @@ export class DashboardView implements vscode.WebviewViewProvider {
       type: 'settings',
       sections: SECTIONS,
       specs: SETTINGS,
-      values: readState()
+      values: readState(),
+      runtime: {
+        source: this.latest?.source ?? 'transcripts',
+        hasPercent: this.latest?.block.hasPercent ?? false,
+        costOn: this.cfg.cost.enabled
+      }
     });
   }
 
   update(snapshot: Snapshot, allTime: Totals): void {
+    const sourceChanged = this.latest?.source !== snapshot.source
+      || this.latest?.block.hasPercent !== snapshot.block.hasPercent;
     this.latest = snapshot;
     this.allTime = allTime;
     this.post();
+    // Runtime dimming depends on whether percentages exist at all.
+    if (sourceChanged) { this.postSettings(); }
   }
 
   reveal(): void {

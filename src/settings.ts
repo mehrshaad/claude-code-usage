@@ -20,6 +20,13 @@ export interface SettingSpec {
   parentValue?: string;
   /** Inert only when the parent equals this value - for "applies unless" cases. */
   parentNot?: string;
+  /**
+   * Inert because of runtime state rather than another setting:
+   * `account` - the account reports the real numbers, so this is ignored
+   * `noPercent` - there is no percentage at all, so this changes nothing
+   * `costOff`  - cost display is off, so this has nothing to show
+   */
+  dimIf?: 'account' | 'noPercent' | 'costOff';
   /** Indent level, 1 = nested, 2 = nested under a nested parent. */
   depth?: number;
 }
@@ -46,12 +53,16 @@ export const SETTINGS: SettingSpec[] = [
     { value: 'account', label: 'Account only' },
     { value: 'transcripts', label: 'Local transcripts only' }
   ], help: 'Limit percentages are computed by Claude and can only be read from your account.' },
-  { key: 'apiPollSeconds', section: 'source', label: 'Refresh limits every', kind: 'stepper', min: 15, max: 3600, help: 'seconds' },
+  { key: 'apiPollSeconds', section: 'source', label: 'Refresh limits every', kind: 'stepper', min: 15, max: 3600, help: 'seconds', parent: 'source', parentNot: 'transcripts', depth: 1 },
   // Fallback ceilings: they apply under `transcripts`, and under `auto` whenever
   // the account is unreachable. Only `account` makes them genuinely inert.
-  { key: 'blockTokenLimit', section: 'source', label: 'Block token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentNot: 'account', depth: 1, help: '0 = no meter' },
-  { key: 'weeklyTokenLimit', section: 'source', label: 'Weekly token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentNot: 'account', depth: 1, help: '0 = no meter' },
-  { key: 'blockHours', section: 'source', label: 'Block length', kind: 'stepper', min: 1, max: 24, help: 'hours' },
+  { key: 'plan', section: 'source', label: 'Plan (estimate)', kind: 'dropdown', dimIf: 'account', options: [
+    { value: 'auto', label: 'Calibrate from my history' }, { value: 'pro', label: 'Pro' },
+    { value: 'max5', label: 'Max 5x' }, { value: 'max20', label: 'Max 20x' }, { value: 'none', label: 'No estimate' }
+  ], help: 'used only until your account is connected' },
+  { key: 'blockTokenLimit', section: 'source', label: 'Block token limit', kind: 'stepper', min: 0, max: 100_000_000_000, dimIf: 'account', depth: 1, help: '0 = from plan' },
+  { key: 'weeklyTokenLimit', section: 'source', label: 'Weekly token limit', kind: 'stepper', min: 0, max: 100_000_000_000, dimIf: 'account', depth: 1, help: '0 = from plan' },
+  { key: 'blockHours', section: 'source', label: 'Block length', kind: 'stepper', min: 1, max: 24, help: 'hours', dimIf: 'account' },
   { key: 'weeklyMode', section: 'source', label: 'Weekly window', kind: 'dropdown', options: [
     { value: 'rolling7d', label: 'Rolling 7 days' }, { value: 'calendar', label: 'Calendar week' }
   ] },
@@ -63,17 +74,17 @@ export const SETTINGS: SettingSpec[] = [
     { value: 'block', label: 'Session' }, { value: 'week', label: 'Week' },
     { value: 'today', label: 'Today' }, { value: 'session', label: 'Active session' }
   ] },
-  { key: 'statusBar.showMeter', section: 'statusBar', label: 'Show meter', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
-  { key: 'statusBar.meterStyle', section: 'statusBar', label: 'Meter style', kind: 'meterStyle', parent: 'statusBar.showMeter', depth: 2 },
-  { key: 'statusBar.meterWidth', section: 'statusBar', label: 'Meter width', kind: 'meterWidth', min: 4, max: 30, parent: 'statusBar.showMeter', depth: 2 },
-  { key: 'statusBar.showPercent', section: 'statusBar', label: 'Show percent', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
+  { key: 'statusBar.showMeter', section: 'statusBar', label: 'Show meter', kind: 'toggle', parent: 'statusBar.enabled', depth: 1, dimIf: 'noPercent' },
+  { key: 'statusBar.meterStyle', section: 'statusBar', label: 'Meter style', kind: 'meterStyle', parent: 'statusBar.showMeter', depth: 2, dimIf: 'noPercent' },
+  { key: 'statusBar.meterWidth', section: 'statusBar', label: 'Meter width', kind: 'meterWidth', min: 4, max: 30, parent: 'statusBar.showMeter', depth: 2, dimIf: 'noPercent' },
+  { key: 'statusBar.showPercent', section: 'statusBar', label: 'Show percent', kind: 'toggle', parent: 'statusBar.enabled', depth: 1, dimIf: 'noPercent' },
   { key: 'statusBar.showReset', section: 'statusBar', label: 'Show reset countdown', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
   { key: 'statusBar.showTokens', section: 'statusBar', label: 'Show tokens', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
-  { key: 'statusBar.showCost', section: 'statusBar', label: 'Show cost', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
+  { key: 'statusBar.showCost', section: 'statusBar', label: 'Show cost', kind: 'toggle', parent: 'statusBar.enabled', depth: 1, dimIf: 'costOff' },
   { key: 'statusBar.showIcon', section: 'statusBar', label: 'Show icon', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
-  { key: 'statusBar.useColors', section: 'statusBar', label: 'Colour at thresholds', kind: 'toggle', parent: 'statusBar.enabled', depth: 1 },
-  { key: 'statusBar.warnThreshold', section: 'statusBar', label: 'Warning at', kind: 'slider', min: 1, max: 100, parent: 'statusBar.enabled', depth: 1, help: '%' },
-  { key: 'statusBar.dangerThreshold', section: 'statusBar', label: 'Danger at', kind: 'slider', min: 1, max: 100, parent: 'statusBar.enabled', depth: 1, help: '%' },
+  { key: 'statusBar.useColors', section: 'statusBar', label: 'Colour at thresholds', kind: 'toggle', parent: 'statusBar.enabled', depth: 1, dimIf: 'noPercent' },
+  { key: 'statusBar.warnThreshold', section: 'statusBar', label: 'Warning at', kind: 'slider', min: 1, max: 100, parent: 'statusBar.enabled', depth: 1, help: '%', dimIf: 'noPercent' },
+  { key: 'statusBar.dangerThreshold', section: 'statusBar', label: 'Danger at', kind: 'slider', min: 1, max: 100, parent: 'statusBar.enabled', depth: 1, help: '%', dimIf: 'noPercent' },
   { key: 'statusBar.clickAction', section: 'statusBar', label: 'Click does', kind: 'dropdown', parent: 'statusBar.enabled', depth: 1, options: [
     { value: 'openDashboard', label: 'Open dashboard' }, { value: 'cycleMetric', label: 'Cycle metric' },
     { value: 'refresh', label: 'Refresh' }, { value: 'none', label: 'Nothing' }
@@ -116,7 +127,7 @@ export const SETTINGS: SettingSpec[] = [
   { key: 'claudeDir', section: 'runtime', label: 'Claude data directory', kind: 'path' },
 
   // Notifications
-  { key: 'notifications.enabled', section: 'notifications', label: 'Warn at thresholds', kind: 'toggle' },
+  { key: 'notifications.enabled', section: 'notifications', label: 'Warn at thresholds', kind: 'toggle', dimIf: 'noPercent', help: 'needs a percentage to warn against' },
   { key: 'notifications.thresholds', section: 'notifications', label: 'Thresholds', kind: 'list', parent: 'notifications.enabled', depth: 1 }
 ];
 

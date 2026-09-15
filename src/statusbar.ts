@@ -40,9 +40,11 @@ export function formatDuration(ms: number): string {
 }
 
 /** Percentages reserve three integer digits so the meter never shifts. */
-export function formatPercent(percent: number): string {
+export function formatPercent(percent: number, estimated = false): string {
   const value = Number.isFinite(percent) ? Math.round(percent) : 0;
-  return `${String(value).padStart(3, ' ')}%`;
+  // The tilde is the only thing distinguishing a measured reading from a
+  // modelled one, so it never gets dropped for width.
+  return `${estimated ? '~' : ''}${String(value).padStart(estimated ? 2 : 3, ' ')}%`;
 }
 
 export function meter(percent: number, width: number, style: string, series: number[]): string {
@@ -201,7 +203,7 @@ export class StatusBar {
     if (sb.showMeter && view.hasPercent) {
       parts.push(meter(view.percent, sb.meterWidth, sb.meterStyle, snap.burnSeries));
     }
-    if (sb.showPercent && view.hasPercent) { parts.push(formatPercent(view.percent)); }
+    if (sb.showPercent && view.hasPercent) { parts.push(formatPercent(view.percent, view.estimated)); }
     if (sb.showTokens || !view.hasPercent) { parts.push(formatTokens(view.totals.counted)); }
     if (sb.showCost && snap.costEnabled) {
       parts.push(`${this.cfg.cost.currencySymbol}${view.totals.cost.toFixed(2)}`);
@@ -230,17 +232,17 @@ export class StatusBar {
     }
   }
 
-  private view(snap: Snapshot): { totals: Totals; percent: number; limit: number; hasPercent: boolean; remainingMs: number; resets: boolean; label: string } {
+  private view(snap: Snapshot): { totals: Totals; percent: number; limit: number; hasPercent: boolean; estimated: boolean; remainingMs: number; resets: boolean; label: string } {
     switch (this.metric) {
       case 'week':
         return { ...window(snap.week), resets: snap.week.hasPercent || this.cfg.weeklyMode === 'calendar', label: 'Week' };
       case 'today':
-        return { totals: snap.today, percent: 0, limit: 0, hasPercent: false, remainingMs: 0, resets: false, label: 'Today' };
+        return { totals: snap.today, percent: 0, limit: 0, hasPercent: false, estimated: false, remainingMs: 0, resets: false, label: 'Today' };
       case 'session': {
         const totals = snap.session?.totals;
         return {
           totals: totals ?? snap.today,
-          percent: 0, limit: 0, hasPercent: false, remainingMs: 0, resets: false,
+          percent: 0, limit: 0, hasPercent: false, estimated: false, remainingMs: 0, resets: false,
           label: snap.session ? `Session · ${snap.session.project}` : 'Session'
         };
       }
@@ -256,7 +258,7 @@ export class StatusBar {
     md.isTrusted = true;
     const line = (label: string, w: Window) =>
       `**${label}** ` +
-      (w.hasPercent ? `${meter(w.percent, 10, this.cfg.statusBar.meterStyle, snap.burnSeries)} ${Math.round(w.percent)}% · ` : '') +
+      (w.hasPercent ? `${meter(w.percent, 10, this.cfg.statusBar.meterStyle, snap.burnSeries)} ${w.estimated ? '~' : ''}${Math.round(w.percent)}% · ` : '') +
       `${formatTokens(w.totals.counted)} tok` +
       (snap.costEnabled ? ` · ${cur}${w.totals.cost.toFixed(2)}` : '');
 
@@ -279,7 +281,9 @@ export class StatusBar {
       if (snap.costEnabled) { md.appendMarkdown(` · ${cur}${m.totals.cost.toFixed(2)}`); }
       md.appendMarkdown('\n\n');
     }
-    if (snap.source === 'transcripts') {
+    if (snap.source === 'transcripts' && snap.block.estimated) {
+      md.appendMarkdown('---\n\n$(info) Estimated against a plan ceiling. Connect your account for Claude\'s own figures.\n\n');
+    } else if (snap.source === 'transcripts') {
       md.appendMarkdown('---\n\n$(info) Percentages need your Claude sign-in. Open the dashboard to connect or diagnose.\n\n');
     }
     md.appendMarkdown('---\n\n$(graph) Click to open the dashboard');
@@ -292,6 +296,9 @@ export class StatusBar {
   }
 }
 
-function window(w: Window): { totals: Totals; percent: number; limit: number; hasPercent: boolean; remainingMs: number } {
-  return { totals: w.totals, percent: w.percent, limit: w.limit, hasPercent: w.hasPercent, remainingMs: w.remainingMs };
+function window(w: Window): { totals: Totals; percent: number; limit: number; hasPercent: boolean; estimated: boolean; remainingMs: number } {
+  return {
+    totals: w.totals, percent: w.percent, limit: w.limit,
+    hasPercent: w.hasPercent, estimated: w.estimated, remainingMs: w.remainingMs
+  };
 }

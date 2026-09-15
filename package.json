@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -158,6 +158,25 @@
             "Only local transcripts - no limit percentages"
           ],
           "markdownDescription": "Where limit percentages come from. Session and weekly percentages are computed by Claude and are read from the Claude Code sign-in already on this machine; transcripts alone give tokens, cost and burn rate."
+        },
+        "claudeUsage.plan": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "pro",
+            "max5",
+            "max20",
+            "none"
+          ],
+          "default": "auto",
+          "enumDescriptions": [
+            "Infer the plan from the largest block this machine has reached",
+            "Claude Pro (estimate)",
+            "Claude Max 5x (estimate)",
+            "Claude Max 20x (estimate)",
+            "No estimate - show tokens only until an account is connected"
+          ],
+          "markdownDescription": "Denominator used for the meter when your account is not connected. Anthropic publishes limits as percentages, never token counts, so every plan figure here is an **estimate** and percentages derived from it are shown with a `~`."
         },
         "claudeUsage.apiPollSeconds": {
           "type": "number",

@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 
 export interface Config {
   source: 'auto' | 'account' | 'transcripts';
+  plan: 'auto' | 'pro' | 'max5' | 'max20' | 'none';
   apiPollSeconds: number;
   blockTokenLimit: number;
   weeklyTokenLimit: number;
@@ -61,6 +62,7 @@ export function readConfig(): Config {
   const g = <T>(key: string, fallback: T): T => c.get<T>(key) ?? fallback;
   return {
     source: g('source', 'auto'),
+    plan: g('plan', 'auto'),
     apiPollSeconds: g('apiPollSeconds', 60),
     blockTokenLimit: g('blockTokenLimit', 0),
     weeklyTokenLimit: g('weeklyTokenLimit', 0),

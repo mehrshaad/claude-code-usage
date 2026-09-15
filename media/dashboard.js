@@ -49,7 +49,7 @@
             ${has ? `<circle class="ring-fill ${cls}" cx="43" cy="43" r="${R}" stroke-dasharray="${arc.toFixed(2)} ${C.toFixed(2)}" transform="rotate(-90 43 43)"></circle>` : ''}
             ${tick}
           </svg>
-          <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+          <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
         </div>
         <div class="ring-meta">
           <span class="gauge-name">Session</span>
@@ -71,7 +71,7 @@
     return `<section>
       <div class="gauge-head">
         <span class="gauge-name">Session</span>
-        <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+        <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
       </div>
       ${has ? `<div class="track"><div class="fill ${cls}" style="width:${width}%"></div>${
         caret != null ? `<div class="caret" style="left:${clamp(caret)}%" title="projected at current burn"></div>` : ''
@@ -110,7 +110,7 @@
     return `<section class="rule">
       <div class="week-row">
         <span class="gauge-name">Week</span>
-        <span class="week-pct num">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span>
+        <span class="week-pct num">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span>
       </div>
       ${has ? `<div class="track week"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
       <div class="gauge-sub">
@@ -216,13 +216,15 @@
       (s.showSessions ? sessions(s, money) : '') +
       (s.showHistory ? history(s) : '') +
       `<footer>
-        <span>${s.source === 'account' ? 'live limits' : 'local only'} · ${s.eventCount} msgs</span>
+        <span>${s.source === 'account' ? 'live limits' : s.block.estimated ? 'estimated' : 'local only'} · ${s.eventCount} msgs</span>
         <span>${new Date(s.lastUpdate).toLocaleTimeString()}</span>
       </footer>` +
       (s.source !== 'account'
         ? `<section class="rule notice">
              <h2>Account</h2>
-             <p class="empty">Session and weekly limit percentages are computed by Claude and read from your account. The Claude Code sign-in on this machine is used automatically; if that read fails you can paste a token instead.</p>
+             <p class="empty">${s.block.estimated
+               ? 'These percentages are <b>estimates</b> against a plan ceiling, because Claude publishes limits as percentages rather than token counts. Connect your account for Claude\'s own figures.'
+               : 'Session and weekly limit percentages are computed by Claude and read from your account. The Claude Code sign-in on this machine is used automatically; if that read fails you can paste a token instead.'}</p>
              <div class="actions">
                <button type="button" data-command="claudeUsage.connect">Connect account</button>
                <button type="button" data-command="claudeUsage.diagnostics">Why not?</button>
@@ -259,7 +261,7 @@
     return `<div class="strip">
       <div class="strip-head">
         <span class="strip-name">Session</span>
-        <span class="strip-pct num ${cls === 'danger' ? 'danger' : ''}">${has ? Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
+        <span class="strip-pct num ${cls === 'danger' ? 'danger' : ''}">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
       </div>
       ${has ? `<div class="track"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
       <div class="strip-sub"><span>${fmt(w.totals.counted)} tok</span><span>resets in ${dur(w.remainingMs)}</span></div>

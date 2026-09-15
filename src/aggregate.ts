@@ -83,6 +83,48 @@ export function currentBlock(events: UsageEvent[], now: number, blockHours: numb
   return { start, end: start + span, events: bucket };
 }
 
+/**
+ * Counted-token ceilings. These are estimates: Anthropic publishes limits as
+ * percentages, never token counts. The Max 20x figures are back-calculated from
+ * one measured account (68.45M counted tokens reported as 7% of a session,
+ * 846M as 26% of a week); the others are scaled from it by plan multiple. They
+ * exist so the meter works without an account, and every percentage derived
+ * from them is marked as estimated.
+ */
+export const PLAN_PRESETS: Record<string, { block: number; week: number }> = {
+  pro: { block: 49_000_000, week: 163_000_000 },
+  max5: { block: 245_000_000, week: 813_000_000 },
+  max20: { block: 978_000_000, week: 3_250_000_000 }
+};
+
+/**
+ * Infer the plan from what this machine has actually reached: the smallest
+ * preset the observed peak still fits inside. Calibrating directly to the peak
+ * would be worse than useless - the heaviest window would always read 100%.
+ */
+export function inferPlan(observedBlockPeak: number): keyof typeof PLAN_PRESETS {
+  if (observedBlockPeak > PLAN_PRESETS.max5.block) { return 'max20'; }
+  if (observedBlockPeak > PLAN_PRESETS.pro.block) { return 'max5'; }
+  return 'pro';
+}
+
+/** The largest block the loaded history contains - a self-correcting ceiling. */
+export function observedBlockMax(events: UsageEvent[], cfg: Config, blockHours: number): number {
+  const span = blockHours * 3_600_000;
+  const sorted = [...events].sort((a, b) => a.ts - b.ts);
+  let start = 0, last = 0, running = 0, best = 0;
+  for (const e of sorted) {
+    if (!start || e.ts >= start + span || e.ts - last >= span) { start = e.ts; running = 0; }
+    running +=
+      (cfg.countInput ? e.input : 0) + (cfg.countOutput ? e.output : 0) +
+      (cfg.countCacheWrites ? e.cacheWrite5m + e.cacheWrite1h : 0) +
+      (cfg.countCacheReads ? e.cacheRead : 0);
+    last = e.ts;
+    if (running > best) { best = running; }
+  }
+  return best;
+}
+
 function makeWindow(
   start: number, end: number, totals: Totals, limit: number, now: number,
   reported: LimitWindow | undefined
@@ -91,13 +133,14 @@ function makeWindow(
     const resetAt = reported.resetsAt ?? end;
     return {
       start, end: resetAt, totals, limit,
-      percent: reported.utilization, hasPercent: true,
+      percent: reported.utilization, hasPercent: true, estimated: false,
       remainingMs: Math.max(0, resetAt - now)
     };
   }
   const percent = limit > 0 ? Math.min(999, (totals.counted / limit) * 100) : 0;
   return {
-    start, end, totals, limit, percent, hasPercent: limit > 0,
+    start, end, totals, limit, percent,
+    hasPercent: limit > 0, estimated: limit > 0,
     remainingMs: Math.max(0, end - now)
   };
 }
@@ -121,8 +164,14 @@ export function buildSnapshot(
   const weekEvents = events.filter((e) => e.ts >= weekStart);
   const weekTotals = sum(weekEvents, cfg);
 
-  const blockLimit = cfg.blockTokenLimit;
-  const weekLimit = cfg.weeklyTokenLimit;
+  // Explicit ceilings win; then the plan preset; then what this machine has
+  // actually reached, which needs no guess at all.
+  const plan = cfg.plan === 'auto'
+    ? inferPlan(observedBlockMax(events, cfg, cfg.blockHours))
+    : cfg.plan;
+  const preset = PLAN_PRESETS[plan];
+  const blockLimit = cfg.blockTokenLimit || preset?.block || 0;
+  const weekLimit = cfg.weeklyTokenLimit || preset?.week || 0;
 
   const dayStart = startOfDay(now);
   const today = sum(events.filter((e) => e.ts >= dayStart), cfg);
@@ -155,6 +204,9 @@ export function buildSnapshot(
     lastUpdate: now,
     costEnabled: cfg.cost.enabled,
     source: report ? 'account' : 'transcripts',
+    blockLimit,
+    weekLimit,
+    plan,
     opusWeek: report?.sevenDayOpus?.utilization,
     sonnetWeek: report?.sevenDaySonnet?.utilization
   };
