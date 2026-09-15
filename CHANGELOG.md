@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+
+- The mascot is now the extension's mark wherever VS Code allows one: the activity bar rail, and the status bar. The status bar renders codicons only - no SVG, no images - so the mascot ships as a contributed icon font, which is the single supported route for custom artwork there
+- `ticks` is back to `▰▱` and is drawn from that same icon font rather than the editor font. Text glyph size belongs to the editor font; a contributed icon is drawn at icon size, so the meter is larger without being wider
+- `bars` added as a separate style, keeping the `▮▯` rectangles from 0.8.1
+- The activity bar icon is the mascot itself, cropped to its own bounds with the eyes punched through as a fill rule rather than painted over, since VS Code uses that icon as a mask
+
 ## 0.8.1
 
 - The `ticks` meter used `▰▱`, slanted parallelograms that render small in most editor fonts. It now uses `▮▯`, vertical rectangles with the same separated-segment reading at a much taller glyph

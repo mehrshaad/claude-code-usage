@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-  <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/>
-  <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="27.3 44" transform="rotate(-90 10 10)"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="7 15 82 66">
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M24 16h48v8h-48z
+    M16 24h64v32h-64z
+    M8 32h8v16h-8z
+    M80 32h8v16h-8z
+    M24 56h48v8h-48z
+    M28 64h8v16h-8z
+    M44 64h8v16h-8z
+    M60 64h8v16h-8z
+    M36 32h8v16h-8z
+    M60 32h8v16h-8z
+  "/>
 </svg>

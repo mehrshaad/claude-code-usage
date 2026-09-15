@@ -8,7 +8,7 @@
 
   // Meter glyphs, mirrored from the status bar so the preview is the real thing.
   const GLYPHS = {
-    ticks: ['▮', '▯'], circles: ['●', '○'],
+    ticks: ['▰', '▱'], bars: ['▮', '▯'], circles: ['●', '○'],
     halfblocks: ['█', '░'], blocks: ['█', '░'], braille: ['⣿', '⣀'], ascii: ['#', '-']
   };
   const STEPS = {
@@ -42,7 +42,8 @@
     ['halfblocks', 'default · 1.25% steps'],
     ['blocks', '10% steps'],
     ['circles', 'largest glyph'],
-    ['ticks', 'tall, countable'],
+    ['ticks', 'countable'],
+    ['bars', 'taller ticks'],
     ['braille', 'font risk'],
     ['ascii', 'universal'],
     ['sparkline', 'burn, not fill']

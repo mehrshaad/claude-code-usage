@@ -3,7 +3,10 @@ import type { Config } from './config';
 import type { Snapshot, Totals, Window } from './types';
 
 const METER_GLYPHS: Record<string, [string, string]> = {
-  ticks: ['▮', '▯'],
+  // Ticks render from the extension's own icon font: text glyph size is the
+  // editor font's business, but a contributed icon is drawn at icon size.
+  ticks: ['$(claude-meter-tick-full)', '$(claude-meter-tick-empty)'],
+  bars: ['▮', '▯'],
   circles: ['●', '○'],
   halfblocks: ['█', '░'],
   blocks: ['█', '░'],
@@ -201,7 +204,7 @@ export class StatusBar {
     }
 
     const parts: string[] = [];
-    if (sb.showIcon) { parts.push('$(robot)'); }
+    if (sb.showIcon) { parts.push('$(claude-meter-mascot)'); }
     if (sb.showMeter && view.hasPercent) {
       parts.push(meter(view.percent, sb.meterWidth, sb.meterStyle, snap.burnSeries));
     }

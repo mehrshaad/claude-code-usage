@@ -82,7 +82,7 @@ Costs use the published per-million-token API rates, including cache write and r
 | `claudeUsage.weeklyMode` | `rolling7d` | Rolling 168 hours or calendar week |
 | `claudeUsage.weekStartsOn` | `monday` | First day of the calendar week |
 | `claudeUsage.statusBar.metric` | `block` | Primary metric: block / week / today / session |
-| `claudeUsage.statusBar.meterStyle` | `halfblocks` | `halfblocks`, `blocks`, `circles`, `ticks`, `braille`, `ascii`, `sparkline` |
+| `claudeUsage.statusBar.meterStyle` | `halfblocks` | `halfblocks`, `blocks`, `circles`, `ticks`, `bars`, `braille`, `ascii`, `sparkline` |
 | `claudeUsage.dashboard.gaugeStyle` | `bar` | Session gauge shape: `bar` or `ring` |
 | `claudeUsage.dashboard.numberFont` | `ui` | Font for numbers: `ui` or `editor` (tabular) |
 | `claudeUsage.statusBar.meterWidth` | `10` | Number of meter segments |
