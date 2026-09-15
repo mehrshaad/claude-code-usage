@@ -109,7 +109,7 @@ export function readConfig(): Config {
       showModels: g('dashboard.showModels', true),
       showHistory: g('dashboard.showHistory', true),
       gaugeStyle: g('dashboard.gaugeStyle', 'bar'),
-      numberFont: g('dashboard.numberFont', 'editor'),
+      numberFont: g('dashboard.numberFont', 'ui'),
       accentColor: g('dashboard.accentColor', '#D97757')
     },
     notifications: {

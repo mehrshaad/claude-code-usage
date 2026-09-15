@@ -5,7 +5,6 @@ import type { Snapshot, Totals, Window } from './types';
 const METER_GLYPHS: Record<string, [string, string]> = {
   ticks: ['▰', '▱'],
   circles: ['●', '○'],
-  circleHalves: ['●', '○'],
   halfblocks: ['█', '░'],
   blocks: ['█', '░'],
   braille: ['⣿', '⣀'],
@@ -15,10 +14,12 @@ const METER_GLYPHS: Record<string, [string, string]> = {
 /** Partial cells for the half-step meter: one cell resolves to ~1.25%. */
 const PARTIAL = ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉'];
 const BRAILLE_PARTIAL = ['', '⣀', '⣤', '⣶'];
-/** Quarter-resolved cells: 2.5% steps at ten segments. */
-const CIRCLE_PARTIAL = ['', '◔', '◑', '◕'];
-/** Fallback for fonts that do not carry the quadrant glyphs at monospace width. */
-const CIRCLE_HALF = ['', '◐', '●'];
+/**
+ * Half-resolved cells. The quadrant glyphs are gone: they are not metrically
+ * compatible across editor fonts, and ◑ fills from the right, which reads
+ * backwards in a meter that grows left to right. ◐ fills from the left.
+ */
+const CIRCLE_PARTIAL = ['', '◐'];
 const SPARK = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 export const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
@@ -48,6 +49,8 @@ export function formatPercent(percent: number, estimated = false): string {
 }
 
 export function meter(percent: number, width: number, style: string, series: number[]): string {
+  // circleHalves merged into circles in 0.8.0.
+  if (style === 'circleHalves') { style = 'circles'; }
   if (style === 'sparkline') {
     const slice = series.slice(-width);
     const peak = Math.max(1, ...slice);
@@ -65,13 +68,12 @@ export function meter(percent: number, width: number, style: string, series: num
     style === 'halfblocks' ? PARTIAL :
     style === 'braille' ? BRAILLE_PARTIAL :
     style === 'circles' ? CIRCLE_PARTIAL :
-    style === 'circleHalves' ? CIRCLE_HALF :
     undefined;
   let body: string;
   if (steps && filled < width) {
     // Circle cells round a remainder up to the next quarter - any progress into a
     // cell should be visible. Block and braille cells take the nearest step.
-    const toStep = style === 'circles' || style === 'circleHalves' ? Math.ceil : Math.round;
+    const toStep = style === 'circles' ? Math.ceil : Math.round;
     const partial = steps[Math.min(steps.length - 1, toStep((exact - filled) * steps.length))] ?? '';
     body = full.repeat(filled) + partial + empty.repeat(width - filled - (partial ? 1 : 0));
   } else {
@@ -199,7 +201,7 @@ export class StatusBar {
     }
 
     const parts: string[] = [];
-    if (sb.showIcon) { parts.push('$(pulse)'); }
+    if (sb.showIcon) { parts.push('$(robot)'); }
     if (sb.showMeter && view.hasPercent) {
       parts.push(meter(view.percent, sb.meterWidth, sb.meterStyle, snap.burnSeries));
     }

@@ -48,7 +48,10 @@
 .rows { display: flex; flex-direction: column; }
 
 .row { display: flex; gap: 7px; padding: 7px 2px; border-bottom: 1px solid var(--line); }
-.row:hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.06)); }
+.row:not(.wide):hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.06)); }
+/* Wide rows hold their own hoverable options; highlighting the container would
+   light up the whole block when the pointer is over one choice. */
+.row.wide:hover > .rowbody > .rowhead { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.06)); }
 .row[data-depth="1"] { padding-left: 9px; border-left: 1px solid var(--line); margin-left: 2px; }
 .row[data-depth="2"] { padding-left: 18px; border-left: 1px solid var(--line); margin-left: 2px; }
 /* Dim, don't hide: the value stays legible and the count stays honest. */
@@ -172,7 +175,10 @@ select.ctl { min-width: 108px; }
   background: none; border: 1px solid var(--line); color: var(--fg); font: inherit;
   padding: 6px 4px; cursor: pointer; border-radius: 0;
 }
+.gaugeopt:hover, .fontopt:hover { border-color: var(--dim); }
 .gaugeopt.on, .fontopt.on { border-color: var(--accent); }
+.chip:hover, .card:hover { border-color: var(--dim); }
+.sw-chip:hover { border-color: var(--dim); }
 .fontopt b { font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .mini-bar { display: block; width: 100%; height: 4px; background: var(--track); }
 .mini-bar i { display: block; height: 100%; background: var(--accent); }

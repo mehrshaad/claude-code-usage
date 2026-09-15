@@ -8,14 +8,13 @@
 
   // Meter glyphs, mirrored from the status bar so the preview is the real thing.
   const GLYPHS = {
-    ticks: ['▰', '▱'], circles: ['●', '○'], circleHalves: ['●', '○'],
+    ticks: ['▰', '▱'], circles: ['●', '○'],
     halfblocks: ['█', '░'], blocks: ['█', '░'], braille: ['⣿', '⣀'], ascii: ['#', '-']
   };
   const STEPS = {
     halfblocks: ['', '▏', '▎', '▍', '▌', '▋', '▊', '▉'],
     braille: ['', '⣀', '⣤', '⣶'],
-    circles: ['', '◔', '◑', '◕'],
-    circleHalves: ['', '◐', '●']
+    circles: ['', '◐']
   };
   const SPARK = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 
@@ -29,7 +28,7 @@
     const steps = STEPS[style];
     let body;
     if (steps && filled < width) {
-      const round = style === 'circles' || style === 'circleHalves' ? Math.ceil : Math.round;
+      const round = style === 'circles' ? Math.ceil : Math.round;
       const partial = steps[Math.min(steps.length - 1, round((exact - filled) * steps.length))] || '';
       body = full.repeat(filled) + partial + empty.repeat(width - filled - (partial ? 1 : 0));
     } else {
@@ -42,8 +41,7 @@
   const METER_STYLES = [
     ['halfblocks', 'default · 1.25% steps'],
     ['blocks', '10% steps'],
-    ['circleHalves', '2.5% steps'],
-    ['circles', 'lightest'],
+    ['circles', 'largest glyph'],
     ['ticks', 'countable'],
     ['braille', 'font risk'],
     ['ascii', 'universal'],

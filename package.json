@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -274,27 +274,25 @@
         "claudeUsage.statusBar.meterStyle": {
           "type": "string",
           "enum": [
-            "ticks",
-            "circles",
-            "circleHalves",
             "halfblocks",
             "blocks",
+            "circles",
+            "ticks",
             "braille",
             "ascii",
             "sparkline"
           ],
           "default": "halfblocks",
           "enumDescriptions": [
+            "Half-step blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, finest resolution",
+            "Solid blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, 10% steps",
+            "Circles - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d0\u25cb\u25cb\u25cb, half steps and the largest glyph",
             "Spaced ticks - \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
-            "Circle steps - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d4\u25cb\u25cb\u25cb, quarter-resolved cells (2.5% steps)",
-            "Circle steps, halves only - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d0\u25cb\u25cb\u25cb, for fonts without the quadrant glyphs",
-            "Half-step blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, creeps between whole segments",
-            "Solid blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, quantised to whole segments",
             "Braille density - \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
             "Bracketed ASCII - [======----], renders anywhere",
             "Burn-rate sparkline instead of a fill"
           ],
-          "markdownDescription": "Meter glyph style. `halfblocks` is the default because block elements share one advance width in every monospace font. The circle styles resolve finer (2.5% per cell) but mix Unicode blocks - `\u25cb` `\u25cf` `\u25d4` are not metrically compatible in many editor fonts and can render at visibly different sizes."
+          "markdownDescription": "Meter glyph style. Status bar text size is set by VS Code, not by this extension - `circles` is the largest of these glyph sets if the meter reads too small."
         },
         "claudeUsage.statusBar.showPercent": {
           "type": "boolean",
@@ -496,9 +494,9 @@
             "editor",
             "ui"
           ],
-          "default": "editor",
+          "default": "ui",
           "enumDescriptions": [
-            "Your editor font - tabular figures, matches code",
+            "Your editor font - tabular figures that never change width",
             "The VS Code interface font - matches the labels around it"
           ],
           "description": "Font used for numbers in the panel. Labels always use the interface font."

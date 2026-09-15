@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+
+- Circle styles merged into one. `circles` now uses only empty, half and full - the quadrant glyphs are gone, since they are not metrically compatible across editor fonts
+- The half circle filled from the wrong side. `◑` fills from the right, which reads backwards in a meter that grows left to right; it is now `◐`. Any remainder shows a half circle, so 94% no longer renders identically to 100%
+- The status bar icon is the robot rather than a heartbeat
+- Panel numbers use the interface font by default. The editor font gives tabular figures that never change width, and remains available as `claudeUsage.dashboard.numberFont`
+- Hovering a wide setting no longer highlights the whole block. Rows that contain their own options - meter style, gauge style, font, accent, thresholds, pricing - highlight per option instead
+- `circleHalves` still works as a setting value and resolves to `circles`
+
 ## 0.7.0
 
 The meter no longer needs a connected account.
