@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.10.0
+
+Fixes the percentages flickering between real figures and a connect prompt.
+
+The account client treated every failure as fatal: one bad response set the
+report to nothing, which flipped the whole panel to "not connected" until the
+next poll happened to succeed. On a long-lived editor that is guaranteed to
+happen repeatedly - the credential rotates underneath us, the endpoint rate
+limits, the machine sleeps, a VPN comes up.
+
+- The last good reading is now served while a refresh is failing, so a
+  transient error is invisible. It is dropped once it is more than 15 minutes
+  old, or as soon as its own window resets - a stale percentage must never be
+  presented as current
+- A 401 or 403 re-reads the credential and retries once, which is what token
+  rotation actually needs
+- Repeated failures back off from 15 seconds to 5 minutes with jitter instead
+  of retrying every minute
+- The credential is cached until something rejects it, rather than re-read on a
+  timer. That removes a `security` invocation every other poll
+- The footer says how old a reading is once it passes two minutes, instead of
+  calling a stale figure live
+- Diagnostics report the account client's state: credential source, last
+  success, reading age, consecutive failures, next retry and last error
+
 ## 0.9.3
 
 - Show Diagnostics now reports the 30-day history (days with data, peak and range), the lookback window, the counting rules and the project filter - enough to explain an empty history chart without guesswork

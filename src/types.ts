@@ -76,6 +76,8 @@ export interface Snapshot {
   weekLimit: number;
   /** Plan actually in force, after inference. */
   plan: string;
+  /** Age of the account reading being shown, when one is. */
+  reportAgeMs: number | undefined;
   opusWeek: number | undefined;
   sonnetWeek: number | undefined;
 }

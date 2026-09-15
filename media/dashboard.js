@@ -217,7 +217,9 @@
       (s.showSessions ? sessions(s, money) : '') +
       (s.showHistory ? history(s) : '') +
       `<footer>
-        <span>${s.source === 'account' ? 'live limits' : s.block.estimated ? 'estimated' : 'local only'} · ${s.eventCount} msgs</span>
+        <span>${s.source === 'account'
+          ? (s.reportAgeMs > 120000 ? 'limits ' + Math.round(s.reportAgeMs / 60000) + 'm old' : 'live limits')
+          : s.block.estimated ? 'estimated' : 'local only'} · ${s.eventCount} msgs</span>
         <span>${new Date(s.lastUpdate).toLocaleTimeString()}</span>
       </footer>` +
       (s.source !== 'account'

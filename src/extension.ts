@@ -35,20 +35,20 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const workspaceName = vscode.workspace.workspaceFolders?.[0]?.name;
 
-  /** Pulls the server-computed limit percentages; transcripts cannot produce them. */
+  /**
+   * Pulls the server-computed limit percentages. refresh() never throws and
+   * serves the last good reading through a transient failure, so a rotated
+   * token or a rate limit no longer drops the panel back to "not connected".
+   */
   async function refreshAccount(): Promise<void> {
     if (cfg.source === 'transcripts') { report = undefined; return; }
-    try {
-      const fetched = await api.fetch();
-      report = fetched;
-      apiWarned = false;
-    } catch (err) {
-      report = undefined;
-      if (!apiWarned) {
-        apiWarned = true;
-        console.warn('[claude-usage] account usage unavailable', err);
-      }
+    report = await api.refresh();
+    const { lastError, consecutiveFailures } = api.status;
+    if (lastError && consecutiveFailures === 1 && !apiWarned) {
+      apiWarned = true;
+      console.warn('[claude-usage] account usage unavailable:', lastError);
     }
+    if (!lastError) { apiWarned = false; }
   }
 
   async function refresh(): Promise<void> {
@@ -58,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
       await scanner.scan(cfg.lookbackDays);
       snapshot = buildSnapshot(scanner.events, cfg, workspaceName, report);
       snapshot.scannedFiles = scanner.scannedFiles;
+      snapshot.reportAgeMs = report ? api.ageMs : undefined;
       statusBar.update(snapshot);
       dashboard.update(snapshot, allTimeTotals(scanner, cfg, workspaceName));
       checkThresholds(snapshot);
@@ -237,7 +238,7 @@ export function activate(context: vscode.ExtensionContext): void {
         `Messages counted     : ${snapshot?.eventCount ?? 0}`,
         `Percentage source    : ${snapshot?.source ?? 'unknown'}`,
         `Credential found     : ${source}`,
-        `Last account error   : ${api.lastError ?? 'none'}`,
+        `Account status       : ${accountStatus(api)}`,
         `Keychain read error  : ${lastKeychainError ?? 'none'}`,
         `Status bar           : ${statusBar.debug}`,
         `Lookback days        : ${cfg.lookbackDays}`,
@@ -320,6 +321,22 @@ export function activate(context: vscode.ExtensionContext): void {
       if (choice === 'Paste token') { await vscode.commands.executeCommand('claudeUsage.connect'); }
     }
   })();
+}
+
+/** The account client's own state: what is failing, and for how long. */
+function accountStatus(api: UsageApi): string {
+  const s = api.status;
+  const age = api.ageMs;
+  const parts = [
+    `credential=${s.tokenSource}`,
+    s.lastSuccessAt ? `lastOk=${new Date(s.lastSuccessAt).toLocaleTimeString()}` : 'lastOk=never',
+    age !== undefined ? `readingAge=${Math.round(age / 1000)}s` : 'readingAge=none'
+  ];
+  if (s.consecutiveFailures) {
+    parts.push(`failures=${s.consecutiveFailures}`, `retryIn=${Math.max(0, Math.round((s.nextAttemptAt - Date.now()) / 1000))}s`);
+  }
+  if (s.lastError) { parts.push(`lastError="${s.lastError}"`); }
+  return parts.join(' · ');
 }
 
 /** Days with data, peak and total - the 30-day chart in one line. */

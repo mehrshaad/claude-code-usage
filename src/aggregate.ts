@@ -215,6 +215,7 @@ export function buildSnapshot(
     blockLimit,
     weekLimit,
     plan,
+    reportAgeMs: undefined,
     opusWeek: report?.sevenDayOpus?.utilization,
     sonnetWeek: report?.sevenDaySonnet?.utilization
   };
