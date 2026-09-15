@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+- Fixed the refresh and settings icons rendering black. VS Code loads title bar icons as images, where `currentColor` has nothing to inherit and resolves to black - so both were near-invisible on dark themes. They now ship as explicit light and dark variants
+
 ## 0.6.1
 
 Fixes found by end-to-end testing of 0.6.0.
