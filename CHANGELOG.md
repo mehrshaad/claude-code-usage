@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- The `ticks` meter used `▰▱`, slanted parallelograms that render small in most editor fonts. It now uses `▮▯`, vertical rectangles with the same separated-segment reading at a much taller glyph
+
 ## 0.8.0
 
 - Circle styles merged into one. `circles` now uses only empty, half and full - the quadrant glyphs are gone, since they are not metrically compatible across editor fonts

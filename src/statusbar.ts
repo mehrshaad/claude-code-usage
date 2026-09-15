@@ -3,7 +3,7 @@ import type { Config } from './config';
 import type { Snapshot, Totals, Window } from './types';
 
 const METER_GLYPHS: Record<string, [string, string]> = {
-  ticks: ['▰', '▱'],
+  ticks: ['▮', '▯'],
   circles: ['●', '○'],
   halfblocks: ['█', '░'],
   blocks: ['█', '░'],

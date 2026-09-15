@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -287,7 +287,7 @@
             "Half-step blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, finest resolution",
             "Solid blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, 10% steps",
             "Circles - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d0\u25cb\u25cb\u25cb, half steps and the largest glyph",
-            "Spaced ticks - \u25b0\u25b0\u25b0\u25b0\u25b0\u25b0\u25b1\u25b1\u25b1\u25b1",
+            "Spaced ticks - \u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25af\u25af\u25af\u25af, tall separated segments",
             "Braille density - \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
             "Bracketed ASCII - [======----], renders anywhere",
             "Burn-rate sparkline instead of a fill"
