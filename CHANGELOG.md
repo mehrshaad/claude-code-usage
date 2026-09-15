@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.3
+
+- Show Diagnostics now reports the 30-day history (days with data, peak and range), the lookback window, the counting rules and the project filter - enough to explain an empty history chart without guesswork
+
 ## 0.9.2
 
 - Recalibrated the plan ceilings. The previous figures came from a session measurement taken before the block anchor was fixed, so it spanned part of the previous window and produced a ceiling about 3.7x too high - the meter read ~16% where Claude reported 60%. The new figures come from a clean reading: 159M counted tokens at 60% of a session, 1.82B at 38% of a week

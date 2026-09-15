@@ -240,6 +240,10 @@ export function activate(context: vscode.ExtensionContext): void {
         `Last account error   : ${api.lastError ?? 'none'}`,
         `Keychain read error  : ${lastKeychainError ?? 'none'}`,
         `Status bar           : ${statusBar.debug}`,
+        `Lookback days        : ${cfg.lookbackDays}`,
+        `Counting             : input=${cfg.countInput} output=${cfg.countOutput} cacheWrites=${cfg.countCacheWrites} cacheReads=${cfg.countCacheReads}`,
+        `Project filter       : ${cfg.projectFilter}${cfg.projectFilter === 'currentWorkspace' ? ` (workspace: ${workspaceName ?? 'none'})` : ''}`,
+        `30-day history       : ${historySummary(snapshot)}`,
         '',
         source === 'none'
           ? 'No Claude Code credential could be read. On macOS the keychain prompts the first time VS Code reads it - if that prompt was dismissed, quit VS Code, reopen, and choose Always Allow. Otherwise use Claude Usage: Paste Account Token.'
@@ -316,6 +320,16 @@ export function activate(context: vscode.ExtensionContext): void {
       if (choice === 'Paste token') { await vscode.commands.executeCommand('claudeUsage.connect'); }
     }
   })();
+}
+
+/** Days with data, peak and total - the 30-day chart in one line. */
+function historySummary(snap: Snapshot | undefined): string {
+  if (!snap || !snap.history.length) { return 'no snapshot yet'; }
+  const days = snap.history.filter((d) => d.counted > 0);
+  if (!days.length) { return `0 of ${snap.history.length} days have data`; }
+  const peak = days.reduce((a, b) => (b.counted > a.counted ? b : a));
+  return `${days.length} of ${snap.history.length} days, peak ${formatTokens(peak.counted)} on ${peak.date}, ` +
+    `first ${days[0].date}, last ${days[days.length - 1].date}`;
 }
 
 function allTimeTotals(scanner: Scanner, cfg: Config, workspace: string | undefined): Totals {
