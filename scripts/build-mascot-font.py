@@ -1,30 +1,35 @@
-"""Build a one-glyph icon font carrying the mascot.
+"""Build the extension's icon font: the mascot and the meter tick cells.
 
-The VS Code status bar renders codicons only - it takes no SVG and no image.
-The single supported way to ship custom artwork there is `contributes.icons`
-with a font file, so the mascot is emitted as a TrueType glyph.
+The VS Code status bar renders codicons only - no SVG, no images - so custom
+artwork there has to arrive as `contributes.icons` with a font file.
+
+Metrics deliberately mirror VS Code's own codicon font, which uses ascent =
+upem, descent = 0, and draws every glyph entirely above the baseline filling
+~94% of the em. Anything hanging below the baseline sits visibly low next to
+the icons around it.
 """
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
-# Candidate i's mascot, in its 96x96 design box (SVG coordinates, y down).
-SOLID = [
-    (24, 16, 48, 8),    # crown
-    (16, 24, 64, 32),   # face
-    (8, 32, 8, 16),     # left ear
-    (80, 32, 8, 16),    # right ear
-    (24, 56, 48, 8),    # jaw
-    (28, 64, 8, 16),    # legs
-    (44, 64, 8, 16),
-    (60, 64, 8, 16),
-]
-HOLES = [(36, 32, 8, 16), (60, 32, 8, 16)]   # eyes
+UPEM = 1000
+BOX = 940          # 94% of the em, matching codicon's 282/300
+PAD = (UPEM - BOX) // 2
 
-# Content spans x 8..88, y 16..80. Fill the em box with minimal padding so the
-# glyph reads as large as possible at 14px in the status bar.
-SCALE, OFF_X, BASE = 11, -28, -60
-fx = lambda x: round(x * SCALE + OFF_X)
-fy = lambda y: round((80 - y) * SCALE + BASE)
+# Candidate i's mascot in its 96x96 design box (SVG coordinates, y down).
+SOLID = [
+    (24, 16, 48, 8), (16, 24, 64, 32), (8, 32, 8, 16), (80, 32, 8, 16),
+    (24, 56, 48, 8), (28, 64, 8, 16), (44, 64, 8, 16), (60, 64, 8, 16),
+]
+HOLES = [(36, 32, 8, 16), (60, 32, 8, 16)]
+
+SRC_X0, SRC_X1, SRC_Y0, SRC_Y1 = 8, 88, 16, 80
+SCALE = min(BOX / (SRC_X1 - SRC_X0), BOX / (SRC_Y1 - SRC_Y0))
+ART_H = (SRC_Y1 - SRC_Y0) * SCALE
+Y_OFF = (UPEM - ART_H) / 2      # centred in the em, never below the baseline
+
+fx = lambda x: round((x - SRC_X0) * SCALE + PAD)
+fy = lambda y: round((SRC_Y1 - y) * SCALE + Y_OFF)
+
 
 def rect(pen, x, y, w, h, clockwise=True):
     pts = [(fx(x), fy(y)), (fx(x + w), fy(y)), (fx(x + w), fy(y + h)), (fx(x), fy(y + h))]
@@ -35,60 +40,50 @@ def rect(pen, x, y, w, h, clockwise=True):
         pen.lineTo(p)
     pen.closePath()
 
+
 def parallelogram(pen, x0, x1, y0, y1, slant, clockwise=True):
-    """A ▰-shaped cell, drawn large enough to read in the status bar."""
     pts = [(x0, y0), (x1, y0), (x1 + slant, y1), (x0 + slant, y1)]
     if not clockwise:
         pts.reverse()
     pen.moveTo(pts[0])
-    for pt in pts[1:]:
-        pen.lineTo(pt)
+    for p in pts[1:]:
+        pen.lineTo(p)
     pen.closePath()
 
 
 pen = TTGlyphPen(None)
 for r in SOLID:
-    rect(pen, *r, clockwise=True)
+    rect(pen, *r)
 for r in HOLES:
-    # Opposite winding punches the eyes out under the non-zero fill rule.
-    rect(pen, *r, clockwise=False)
+    rect(pen, *r, clockwise=False)   # opposite winding punches the eyes
 mascot = pen.glyph()
 
-# The tick cells. Text glyphs are sized by the editor font; these are drawn in
-# the em box instead, so the meter reads larger without getting wider.
-TICK_X0, TICK_X1, TICK_Y0, TICK_Y1, SLANT = 40, 470, -60, 700, 90
-INSET = 95
+# Tick cells: full height of the same box, so the meter matches the icon beside it.
+TX0, TX1, TY0, TY1, SLANT, INSET = 40, 450, PAD, PAD + BOX, 90, 100
 
-tick_pen = TTGlyphPen(None)
-parallelogram(tick_pen, TICK_X0, TICK_X1, TICK_Y0, TICK_Y1, SLANT)
-tick_full = tick_pen.glyph()
+tp = TTGlyphPen(None)
+parallelogram(tp, TX0, TX1, TY0, TY1, SLANT)
+tick_full = tp.glyph()
 
-tick_pen = TTGlyphPen(None)
-parallelogram(tick_pen, TICK_X0, TICK_X1, TICK_Y0, TICK_Y1, SLANT)
-parallelogram(tick_pen, TICK_X0 + INSET, TICK_X1 - INSET,
-              TICK_Y0 + INSET, TICK_Y1 - INSET, SLANT, clockwise=False)
-tick_empty = tick_pen.glyph()
+tp = TTGlyphPen(None)
+parallelogram(tp, TX0, TX1, TY0, TY1, SLANT)
+parallelogram(tp, TX0 + INSET, TX1 - INSET, TY0 + INSET, TY1 - INSET, SLANT, clockwise=False)
+tick_empty = tp.glyph()
 
-blank = TTGlyphPen(None).glyph()
-order = ['.notdef', 'mascot', 'tickFull', 'tickEmpty']
-fb = FontBuilder(1000, isTTF=True)
-fb.setupGlyphOrder(order)
+fb = FontBuilder(UPEM, isTTF=True)
+fb.setupGlyphOrder(['.notdef', 'mascot', 'tickFull', 'tickEmpty'])
 fb.setupCharacterMap({0xE001: 'mascot', 0xE010: 'tickFull', 0xE011: 'tickEmpty'})
-fb.setupGlyf({'.notdef': blank, 'mascot': mascot, 'tickFull': tick_full, 'tickEmpty': tick_empty})
+fb.setupGlyf({'.notdef': TTGlyphPen(None).glyph(), 'mascot': mascot,
+              'tickFull': tick_full, 'tickEmpty': tick_empty})
 fb.setupHorizontalMetrics({
-    '.notdef': (1000, 0), 'mascot': (1000, fx(8)),
-    'tickFull': (620, TICK_X0), 'tickEmpty': (620, TICK_X0)
+    '.notdef': (UPEM, 0),
+    'mascot': (UPEM, fx(SRC_X0)),
+    'tickFull': (600, TX0), 'tickEmpty': (600, TX0),
 })
-fb.setupHorizontalHeader(ascent=800, descent=-200)
-fb.setupNameTable({
-    'familyName': 'claude-code-meter', 'styleName': 'Regular',
-    'psName': 'claude-code-meter-Regular', 'version': '1.0'
-})
-fb.setupOS2(sTypoAscender=800, sTypoDescender=-200, usWinAscent=800, usWinDescent=200)
+fb.setupHorizontalHeader(ascent=UPEM, descent=0)
+fb.setupNameTable({'familyName': 'claude-code-meter', 'styleName': 'Regular',
+                   'psName': 'claude-code-meter-Regular', 'version': '1.0'})
+fb.setupOS2(sTypoAscender=UPEM, sTypoDescender=0, usWinAscent=UPEM, usWinDescent=0)
 fb.setupPost()
 fb.save('media/mascot.ttf')
-
-xs = [fx(8), fx(88)]
-ys = [fy(80), fy(16)]
-print(f'glyphs: mascot, tickFull, tickEmpty')
-print(f'media/mascot.ttf written - glyph box x {xs[0]}..{xs[1]}, y {ys[0]}..{ys[1]} of a 1000 em')
+print(f'mascot y {fy(SRC_Y1)}..{fy(SRC_Y0)}, ticks y {TY0}..{TY1}, all above the baseline in a {UPEM} em')

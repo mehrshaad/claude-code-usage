@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- The mascot and the meter ticks sat low in the status bar. VS Code's codicon font draws every glyph entirely above the baseline, filling ~94% of the em with ascent = upem and descent = 0; this font hung 60 units below the baseline and topped out at 70%, so its glyphs sat lower and read smaller than the icons beside them. The metrics now match codicon's, and the mascot and tick cells share one vertical centre
+
 ## 0.9.0
 
 - The mascot is now the extension's mark wherever VS Code allows one: the activity bar rail, and the status bar. The status bar renders codicons only - no SVG, no images - so the mascot ships as a contributed icon font, which is the single supported route for custom artwork there
