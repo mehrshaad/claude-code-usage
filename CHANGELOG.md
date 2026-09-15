@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.1
+
+Fixes found by end-to-end testing of 0.6.0.
+
+- The settings surface broke a few seconds after opening. The panel sends a percent-only update on every snapshot, and the settings module replaced its whole state from that payload, wiping the spec and values and throwing on the next render. It now merges
+- The fallback token limits no longer dim under `source: auto`. They apply there whenever the account is unreachable; only `account` makes them genuinely inert
+- Meter style notes no longer wrap to a second line at 300px
+
 ## 0.6.0
 
 All 46 settings are now editable in the sidebar, implementing the settings design.

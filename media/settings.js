@@ -57,10 +57,12 @@
   let post = () => {};
 
   api.init = (poster) => { post = poster; };
+  // Merge, never replace: the panel sends {percent} on every snapshot, which
+  // would otherwise wipe the spec and values a few seconds after opening.
   api.update = (payload) => {
-    state.sections = payload.sections;
-    state.specs = payload.specs;
-    state.values = payload.values;
+    if (payload.sections) { state.sections = payload.sections; }
+    if (payload.specs) { state.specs = payload.specs; }
+    if (payload.values) { state.values = payload.values; }
     if (payload.percent != null) { state.percent = payload.percent; }
   };
   api.setOpen = (id) => { state.open = id; state.confirm = null; };
@@ -74,6 +76,7 @@
   function inert(spec) {
     if (!spec.parent) { return false; }
     const parent = valueOf(spec.parent);
+    if (spec.parentNot !== undefined) { return parent === spec.parentNot; }
     if (spec.parentValue !== undefined) { return parent !== spec.parentValue; }
     return !parent;
   }

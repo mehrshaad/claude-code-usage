@@ -164,7 +164,7 @@ select.ctl { min-width: 108px; }
 .styleopt:hover { background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.08)); }
 .styleopt.on { border-left-color: var(--accent); }
 .styleid { font-size: 10px; color: var(--dim); }
-.stylenote { font-size: 9px; color: var(--dim); margin-left: auto; }
+.stylenote { font-size: 9px; color: var(--dim); margin-left: auto; white-space: nowrap; }
 
 .gauges, .fonts { display: flex; gap: 6px; width: 100%; }
 .gaugeopt, .fontopt {
@@ -197,8 +197,12 @@ select.ctl { min-width: 108px; }
 .confirm .no { background: none; border: 0; color: var(--dim); font: inherit; cursor: pointer; }
 
 /* Reflow: labels and controls never shrink; captions and notes drop. */
+/* The glyph run is fixed width, so the note is what has to give first. */
+@media (max-width: 340px) {
+  .stylenote { display: none; }
+}
 @media (max-width: 260px) {
-  .stylenote, .hitsec, .navmeta b { display: none; }
+  .hitsec, .navmeta b { display: none; }
 }
 @media (min-width: 380px) {
   .row { padding-top: 8px; padding-bottom: 8px; }

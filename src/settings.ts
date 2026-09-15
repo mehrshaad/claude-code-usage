@@ -18,6 +18,8 @@ export interface SettingSpec {
   /** Parent key that must be truthy (or equal `parentValue`) for this to apply. */
   parent?: string;
   parentValue?: string;
+  /** Inert only when the parent equals this value - for "applies unless" cases. */
+  parentNot?: string;
   /** Indent level, 1 = nested, 2 = nested under a nested parent. */
   depth?: number;
 }
@@ -45,8 +47,10 @@ export const SETTINGS: SettingSpec[] = [
     { value: 'transcripts', label: 'Local transcripts only' }
   ], help: 'Limit percentages are computed by Claude and can only be read from your account.' },
   { key: 'apiPollSeconds', section: 'source', label: 'Refresh limits every', kind: 'stepper', min: 15, max: 3600, help: 'seconds' },
-  { key: 'blockTokenLimit', section: 'source', label: 'Block token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentValue: 'transcripts', depth: 1, help: '0 = no meter' },
-  { key: 'weeklyTokenLimit', section: 'source', label: 'Weekly token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentValue: 'transcripts', depth: 1, help: '0 = no meter' },
+  // Fallback ceilings: they apply under `transcripts`, and under `auto` whenever
+  // the account is unreachable. Only `account` makes them genuinely inert.
+  { key: 'blockTokenLimit', section: 'source', label: 'Block token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentNot: 'account', depth: 1, help: '0 = no meter' },
+  { key: 'weeklyTokenLimit', section: 'source', label: 'Weekly token limit', kind: 'stepper', min: 0, max: 100_000_000_000, parent: 'source', parentNot: 'account', depth: 1, help: '0 = no meter' },
   { key: 'blockHours', section: 'source', label: 'Block length', kind: 'stepper', min: 1, max: 24, help: 'hours' },
   { key: 'weeklyMode', section: 'source', label: 'Weekly window', kind: 'dropdown', options: [
     { value: 'rolling7d', label: 'Rolling 7 days' }, { value: 'calendar', label: 'Calendar week' }
