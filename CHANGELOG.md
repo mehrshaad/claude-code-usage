@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.4
+
+- The status bar item can no longer render as an empty string, which shows as no item at all. Whatever the combination of settings, it falls back to the token count
+- Show Diagnostics now reports the status bar's own state: whether it is enabled, which metric is in force and whether that came from the cycle command, whether the item exists, and its current text
+
 ## 0.6.3
 
 - Meter style previews rendered as empty glyph runs. They preview at your real percentage, which is 0 with no account connected, so every style showed as all-empty and the list was unreadable. They now fall back to a representative value

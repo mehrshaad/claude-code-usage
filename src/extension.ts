@@ -239,6 +239,7 @@ export function activate(context: vscode.ExtensionContext): void {
         `Credential found     : ${source}`,
         `Last account error   : ${api.lastError ?? 'none'}`,
         `Keychain read error  : ${lastKeychainError ?? 'none'}`,
+        `Status bar           : ${statusBar.debug}`,
         '',
         source === 'none'
           ? 'No Claude Code credential could be read. On macOS the keychain prompts the first time VS Code reads it - if that prompt was dismissed, quit VS Code, reopen, and choose Always Allow. Otherwise use Claude Usage: Paste Account Token.'

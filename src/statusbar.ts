@@ -87,6 +87,17 @@ export class StatusBar {
   private spinner: NodeJS.Timeout | undefined;
   private spinnerFrame = 0;
 
+  /** Last rendered state, for the diagnostics command. */
+  public get debug(): string {
+    const sb = this.cfg.statusBar;
+    return [
+      `enabled=${sb.enabled}`,
+      `metric=${this.metric}${this.metricOverride ? ' (cycled)' : ''}`,
+      `visible=${this.item ? 'item exists' : 'NO ITEM'}`,
+      `text="${this.item?.text ?? ''}"`
+    ].join(' · ');
+  }
+
   constructor(cfg: Config) {
     this.cfg = cfg;
     this.build();
@@ -198,7 +209,8 @@ export class StatusBar {
     if (sb.showReset && view.resets) {
       parts.push(`· ${formatDuration(view.remainingMs)}`);
     }
-    item.text = parts.join(' ');
+    // An empty string renders as no item at all, so never emit one.
+    item.text = parts.join(' ').trim() || formatTokens(view.totals.counted);
     item.tooltip = this.tooltip(snap);
 
     const danger = view.percent >= sb.dangerThreshold;
