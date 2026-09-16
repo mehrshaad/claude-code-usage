@@ -46,8 +46,13 @@ const ENDPOINT = 'https://api.anthropic.com/api/oauth/usage';
 const SECRET_KEY = 'claudeUsage.oauthToken';
 const KEYCHAIN_SERVICE = 'Claude Code-credentials';
 
-/** How long a reading stays usable when refreshes are failing. */
-const MAX_STALE_MS = 15 * 60_000;
+/**
+ * How long a reading stays usable when refreshes are failing. Outages are
+ * seconds, so this only has to outlast a blip - and the percentage is shared
+ * across every device on the account, so a generous window here shows one
+ * machine a figure another machine has already moved past.
+ */
+const MAX_STALE_MS = 5 * 60_000;
 /** Backoff bounds for repeated failures, so a dead endpoint is not hammered. */
 const BACKOFF_BASE_MS = 15_000;
 const BACKOFF_MAX_MS = 5 * 60_000;

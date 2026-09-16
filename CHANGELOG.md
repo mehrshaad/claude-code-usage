@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.10.1
+
+Fixes two devices on one account reporting different percentages.
+
+The limit percentage is account-wide, so every device should agree. This one
+refreshed it on a fixed 60 second timer and nothing else, and 0.10.0 allowed a
+reading to be served for up to 15 minutes while refreshes failed - a displayed
+figure could be ~16 minutes behind, which during active use is several points.
+The machine you are not typing on wins, because it refreshed more recently.
+
+- The account reading is refreshed when new messages appear in the local
+  transcripts, which is the moment the percentage actually changes. Debounced to
+  at most one refresh per 20 seconds so the endpoint is still treated politely
+- Also refreshed when the window regains focus, which is exactly when you have
+  come back from the other machine
+- The stale window drops from 15 minutes to 5. Outages last seconds; the longer
+  window only served to show one machine a figure another had passed
+- The footer calls a reading stale after one minute rather than two
+- Marketplace icon: the dial now spans 232 of 256 pixels rather than 194, so the
+  tile reads at the 32px the marketplace grid actually uses
+
 ## 0.10.0
 
 Fixes the percentages flickering between real figures and a connect prompt.

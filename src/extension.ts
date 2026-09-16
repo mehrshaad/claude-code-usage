@@ -34,14 +34,19 @@ export function activate(context: vscode.ExtensionContext): void {
   let apiTimer: NodeJS.Timeout | undefined;
 
   const workspaceName = vscode.workspace.workspaceFolders?.[0]?.name;
+  /** Floor between account refreshes, so event-driven ones stay polite. */
+  const ACCOUNT_MIN_INTERVAL_MS = 20_000;
+  let lastAccountAt = 0;
 
   /**
    * Pulls the server-computed limit percentages. refresh() never throws and
    * serves the last good reading through a transient failure, so a rotated
    * token or a rate limit no longer drops the panel back to "not connected".
    */
-  async function refreshAccount(): Promise<void> {
+  async function refreshAccount(force = true): Promise<void> {
     if (cfg.source === 'transcripts') { report = undefined; return; }
+    if (!force && Date.now() - lastAccountAt < ACCOUNT_MIN_INTERVAL_MS) { return; }
+    lastAccountAt = Date.now();
     report = await api.refresh();
     const { lastError, consecutiveFailures } = api.status;
     if (lastError && consecutiveFailures === 1 && !apiWarned) {
@@ -55,7 +60,12 @@ export function activate(context: vscode.ExtensionContext): void {
     if (scanning) { pending = true; return; }
     scanning = true;
     try {
+      const before = scanner.events.length;
       await scanner.scan(cfg.lookbackDays);
+      // New messages mean the account percentage has just moved. Waiting for the
+      // next poll leaves this machine reporting a figure another device has
+      // already passed, so refresh on the evidence rather than on a timer.
+      if (scanner.events.length > before) { await refreshAccount(false); }
       snapshot = buildSnapshot(scanner.events, cfg, workspaceName, report);
       snapshot.scannedFiles = scanner.scannedFiles;
       snapshot.reportAgeMs = report ? api.ageMs : undefined;
@@ -107,7 +117,7 @@ export function activate(context: vscode.ExtensionContext): void {
     if (apiTimer) { clearInterval(apiTimer); }
     pollTimer = setInterval(() => void refresh(), Math.max(500, cfg.refreshIntervalMs));
     apiTimer = setInterval(async () => {
-      await refreshAccount();
+      await refreshAccount(false);
       await refresh();
     }, Math.max(15, cfg.apiPollSeconds) * 1000);
     // Keeps the reset countdown moving between scans.
@@ -294,6 +304,11 @@ export function activate(context: vscode.ExtensionContext): void {
       startWatch();
       startTimers();
       await refreshAccount();
+      await refresh();
+    }),
+    vscode.window.onDidChangeWindowState(async (state) => {
+      if (!state.focused) { return; }
+      await refreshAccount(false);
       await refresh();
     }),
     new vscode.Disposable(() => {
