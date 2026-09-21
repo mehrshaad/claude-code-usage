@@ -2,7 +2,7 @@
   "name": "claude-code-meter",
   "displayName": "Claude Code Meter - Usage & Limits",
   "description": "Live Claude Code usage in your status bar: session and weekly rate-limit meter, token and cost tracking, per-model and per-session breakdown. Real limit percentages from your Claude account, not estimates.",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "publisher": "Mehrshad",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -292,7 +292,7 @@
           "enumDescriptions": [
             "Half-step blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u258e\u2591\u2591\u2591, finest resolution",
             "Solid blocks - \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591, 10% steps",
-            "Circles - \u25cf\u25cf\u25cf\u25cf\u25cf\u25cf\u25d0\u25cb\u25cb\u25cb, half steps and the largest round glyph",
+            "Circles - drawn from this extension\u2019s own font, so every cell is identical on every platform",
             "Spaced ticks - drawn from this extension\u2019s own icon font, so they are larger than text glyphs",
             "Bars - \u25ae\u25ae\u25ae\u25ae\u25ae\u25ae\u25af\u25af\u25af\u25af, taller than ticks",
             "Braille density - \u28ff\u28ff\u28ff\u28ff\u28ff\u28ff\u28e4\u28c0\u28c0\u28c0 (metrics vary by font)",
@@ -530,6 +530,27 @@
         "default": {
           "fontPath": "media/mascot.ttf",
           "fontCharacter": "\\E011"
+        }
+      },
+      "claude-meter-circle-full": {
+        "description": "Meter circle, filled",
+        "default": {
+          "fontPath": "media/mascot.ttf",
+          "fontCharacter": "\\E020"
+        }
+      },
+      "claude-meter-circle-half": {
+        "description": "Meter circle, half",
+        "default": {
+          "fontPath": "media/mascot.ttf",
+          "fontCharacter": "\\E021"
+        }
+      },
+      "claude-meter-circle-empty": {
+        "description": "Meter circle, empty",
+        "default": {
+          "fontPath": "media/mascot.ttf",
+          "fontCharacter": "\\E022"
         }
       }
     }

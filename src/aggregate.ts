@@ -188,7 +188,13 @@ export function buildSnapshot(
   const session = sessions.find((s) => s.active) ?? sessions[0];
 
   const models = buildModels(block.events.length ? block.events : weekEvents, cfg);
-  const history = buildHistory(events, cfg, now);
+  // A new install has nothing to show across 30 days, so until there is a
+  // week of history the chart reports the last 24 hours instead.
+  const oldest = events.length ? Math.min(...events.map((e) => e.ts)) : now;
+  const historyMode: 'day' | 'hour' = now - oldest < 7 * 86_400_000 ? 'hour' : 'day';
+  const history = historyMode === 'hour'
+    ? buildHourly(events, cfg, now)
+    : buildHistory(events, cfg, now);
   const { burnPerMin, series } = burn(block.events, now);
 
   const remainingTokens = Math.max(0, blockLimit - blockTotals.counted);
@@ -204,6 +210,7 @@ export function buildSnapshot(
     models,
     sessions: sessions.slice(0, cfg.dashboard.maxSessions),
     history,
+    historyMode,
     burnPerMin,
     burnSeries: series,
     projectedExhaustionMs: projected,
@@ -250,6 +257,32 @@ function buildModels(events: UsageEvent[], cfg: Config): ModelRow[] {
     .sort((a, b) => b.totals.counted - a.totals.counted);
 }
 
+/** The last 24 hours, one bucket per hour, in local time. */
+function buildHourly(events: UsageEvent[], cfg: Config, now: number): DayRow[] {
+  const map = new Map<number, Totals>();
+  const hourOf = (ts: number) => new Date(ts).setMinutes(0, 0, 0);
+  for (const e of events) {
+    const key = hourOf(e.ts);
+    let t = map.get(key);
+    if (!t) { t = emptyTotals(); map.set(key, t); }
+    add(t, e, cfg);
+  }
+  const rows: DayRow[] = [];
+  const currentHour = hourOf(now);
+  for (let i = 23; i >= 0; i--) {
+    const key = currentHour - i * 3_600_000;
+    const t = map.get(key);
+    const at = new Date(key);
+    rows.push({
+      date: `${at.toISOString().slice(0, 10)} ${String(at.getHours()).padStart(2, '0')}:00`,
+      label: `${String(at.getHours()).padStart(2, '0')}:00`,
+      counted: t?.counted ?? 0,
+      cost: t?.cost ?? 0
+    });
+  }
+  return rows;
+}
+
 function buildHistory(events: UsageEvent[], cfg: Config, now: number): DayRow[] {
   const map = new Map<string, Totals>();
   for (const e of events) {
@@ -262,7 +295,7 @@ function buildHistory(events: UsageEvent[], cfg: Config, now: number): DayRow[] 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now - i * 86_400_000).toISOString().slice(0, 10);
     const t = map.get(date);
-    rows.push({ date, counted: t?.counted ?? 0, cost: t?.cost ?? 0 });
+    rows.push({ date, label: date.slice(5), counted: t?.counted ?? 0, cost: t?.cost ?? 0 });
   }
   return rows;
 }

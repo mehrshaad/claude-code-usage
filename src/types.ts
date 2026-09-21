@@ -50,7 +50,10 @@ export interface SessionRow {
 }
 
 export interface DayRow {
+  /** Bucket key: a date for daily rows, a date and hour for hourly ones. */
   date: string;
+  /** Short axis label. */
+  label: string;
   counted: number;
   cost: number;
 }
@@ -63,6 +66,8 @@ export interface Snapshot {
   models: ModelRow[];
   sessions: SessionRow[];
   history: DayRow[];
+  /** Which resolution the history is in, so the panel can title it. */
+  historyMode: 'day' | 'hour';
   burnPerMin: number;
   burnSeries: number[];
   projectedExhaustionMs: number | undefined;

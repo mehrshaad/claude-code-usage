@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.0
+
+- The circle meter is drawn from this extension's own font. `○`, `◐` and `●` come from three different Unicode ranges, and Windows fonts render them at different sizes and advances, so the meter looked ragged there. Owning the glyphs makes every cell identical on every platform
+- Glyphs are 80% of the em rather than 94%. At the larger size they stretched the status bar item's line box, which showed as a background pill taller than its neighbours and sitting high against them
+- The history chart follows the data: with less than a week of transcripts it shows the last 24 hours by hour, otherwise 30 days. A new install no longer looks at an empty month
+- The estimate notice says what an estimate actually covers. It is computed from this machine's transcripts alone, so usage on another device is invisible - and when the window opened on that other machine, both the percentage and the reset countdown read well below the truth. No ceiling calibration can fix that; only connecting the account can
+
 ## 0.10.1
 
 Fixes two devices on one account reporting different percentages.

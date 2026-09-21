@@ -7,7 +7,10 @@ const METER_GLYPHS: Record<string, [string, string]> = {
   // editor font's business, but a contributed icon is drawn at icon size.
   ticks: ['$(claude-meter-tick-full)', '$(claude-meter-tick-empty)'],
   bars: ['▮', '▯'],
-  circles: ['●', '○'],
+  // Drawn from this extension's own font: the Unicode circles come from three
+  // different ranges and Windows fonts size them differently, which made the
+  // meter ragged. Owning the glyphs makes every cell identical everywhere.
+  circles: ['$(claude-meter-circle-full)', '$(claude-meter-circle-empty)'],
   halfblocks: ['█', '░'],
   blocks: ['█', '░'],
   braille: ['⣿', '⣀'],
@@ -22,7 +25,7 @@ const BRAILLE_PARTIAL = ['', '⣀', '⣤', '⣶'];
  * compatible across editor fonts, and ◑ fills from the right, which reads
  * backwards in a meter that grows left to right. ◐ fills from the left.
  */
-const CIRCLE_PARTIAL = ['', '◐'];
+const CIRCLE_PARTIAL = ['', '$(claude-meter-circle-half)'];
 const SPARK = ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
 export const SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
@@ -288,7 +291,7 @@ export class StatusBar {
       md.appendMarkdown('\n\n');
     }
     if (snap.source === 'transcripts' && snap.block.estimated) {
-      md.appendMarkdown('---\n\n$(info) Estimated against a plan ceiling. Connect your account for Claude\'s own figures.\n\n');
+      md.appendMarkdown('---\n\n$(info) Estimated from this machine only - other devices are not counted. Connect your account for Claude\'s own figures.\n\n');
     } else if (snap.source === 'transcripts') {
       md.appendMarkdown('---\n\n$(info) Percentages need your Claude sign-in. Open the dashboard to connect or diagnose.\n\n');
     }

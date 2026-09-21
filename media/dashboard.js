@@ -162,8 +162,13 @@
     const bars = s.history.map((d, i) =>
       `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${clamp((d.counted / peak) * 100) || 1}%" title="${d.date} · ${fmt(d.counted)} tok"></span>`
     ).join('');
-    return `<section class="rule"><h2>30 days</h2><div class="spark">${bars}</div>
-      <div class="axis"><span>${esc(s.history[0].date.slice(5))}</span><span>${esc(s.history[s.history.length - 1].date.slice(5))}</span></div></section>`;
+    const hourly = s.historyMode === 'hour';
+    const first = s.history[0];
+    const last = s.history[s.history.length - 1];
+    return `<section class="rule"><h2>${hourly ? '24 hours' : '30 days'}</h2><div class="spark">${bars}</div>
+      <div class="axis"><span>${esc(first.label || first.date)}</span>${
+        hourly ? '<span>now</span>' : `<span>${esc(last.label || last.date)}</span>`
+      }</div></section>`;
   }
 
   function skeleton() {
@@ -226,7 +231,7 @@
         ? `<section class="rule notice">
              <h2>Account</h2>
              <p class="empty">${s.block.estimated
-               ? 'These percentages are <b>estimates</b> against a plan ceiling, because Claude publishes limits as percentages rather than token counts. Connect your account for Claude\'s own figures.'
+               ? 'These percentages are <b>estimates</b> from this machine\'s transcripts only. Usage on another device or on claude.ai is invisible here, and the window itself may have opened on that other machine - so both the percentage and the reset countdown can be well below the truth. Connect your account for Claude\'s own figures, which cover every device.'
                : 'Session and weekly limit percentages are computed by Claude and read from your account. The Claude Code sign-in on this machine is used automatically; if that read fails you can paste a token instead.'}</p>
              <div class="actions">
                <button type="button" data-command="claudeUsage.connect">Connect account</button>
