@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.12.0
+
+Two root causes, both from using APIs the host does not support.
+
+**The account never connected on some machines.** The client used global
+`fetch`. VS Code patches Node's `http`/`https` in the extension host for proxy
+support and certificate handling; undici's `fetch` bypasses that patching and
+reports every failure as a bare `fetch failed`. On a machine where `curl` and
+plain `node` reached the endpoint, the extension host still could not. The
+client now uses the `https` module, and errors carry the real reason from
+`err.cause` rather than `fetch failed`.
+
+**Inline styles were silently dropped.** The webview CSP is
+`style-src <cspSource>` with no `'unsafe-inline'`, which blocks every
+`style="..."` attribute in markup. Everything positional was affected: history
+bars fell back to their 1px floor, so a month of usage drew as a flat dashed
+line, and gauge fills fell back to auto width, so every meter read full
+regardless of the percentage. Positional values now travel as data attributes
+and are applied through CSSOM, which CSP permits.
+
+Also in this release:
+
+- Circle meter glyphs are drawn from the extension's own font. `○`, `◐` and `●`
+  come from three Unicode ranges that Windows fonts size differently
+- Glyphs are 80% of the em rather than 94%, so the status bar item no longer
+  sits taller than its neighbours
+- The history chart shows the last 24 hours by hour until there is a week of
+  transcripts, then 30 days
+- The estimate notice states that it covers this machine only
+- Diagnostics report the extension version, the running panel build, the
+  account client's state, and what the chart computed against what it drew
+
 ## 0.11.2
 
 - Show Diagnostics reports the extension version and which panel script is actually running. An open panel keeps its loaded script until the window reloads, so a fixed build and a stale one looked identical from the outside

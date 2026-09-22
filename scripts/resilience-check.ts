@@ -5,20 +5,36 @@ type Step = { kind: 'ok'; pct: number } | { kind: 'status'; code: number } | { k
 let script: Step[] = [];
 let calls = 0;
 
-(globalThis as any).fetch = async () => {
+// Stand in for https.request, which the client now uses.
+const https = require('https');
+https.request = (_url: unknown, _opts: unknown, cb: (res: unknown) => void) => {
   const step = script[Math.min(calls++, script.length - 1)];
-  if (step.kind === 'throw') { throw new Error('network is unreachable'); }
-  if (step.kind === 'status') {
-    return { ok: false, status: step.code, statusText: 'x', json: async () => ({}) } as unknown as Response;
-  }
-  const resets = new Date(Date.now() + 3_600_000).toISOString();
-  return {
-    ok: true, status: 200, statusText: 'OK',
-    json: async () => ({
-      five_hour: { utilization: step.pct, resets_at: resets },
-      seven_day: { utilization: 38, resets_at: resets }
-    })
-  } as unknown as Response;
+  const handlers: Record<string, (e?: unknown) => void> = {};
+  const req = {
+    on(event: string, fn: (e?: unknown) => void) { handlers[event] = fn; return req; },
+    end() {
+      setImmediate(() => {
+        if (step.kind === 'throw') { handlers.error?.(new Error('network is unreachable')); return; }
+        const resets = new Date(Date.now() + 3_600_000).toISOString();
+        const body = step.kind === 'ok'
+          ? JSON.stringify({ five_hour: { utilization: step.pct, resets_at: resets },
+                             seven_day: { utilization: 38, resets_at: resets } })
+          : '{}';
+        const listeners: Record<string, (c?: unknown) => void> = {};
+        cb({
+          statusCode: step.kind === 'status' ? step.code : 200,
+          statusMessage: 'x',
+          on(event: string, fn: (c?: unknown) => void) {
+            listeners[event] = fn;
+            if (event === 'end') { setImmediate(() => { listeners.data?.(Buffer.from(body)); fn(); }); }
+          }
+        });
+      });
+      return req;
+    },
+    destroy() { return req; }
+  };
+  return req;
 };
 
 const secrets = { get: async () => 'test-token', store: async () => {}, delete: async () => {} };

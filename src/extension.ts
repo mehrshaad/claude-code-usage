@@ -258,6 +258,7 @@ export function activate(context: vscode.ExtensionContext): void {
         `Counting             : input=${cfg.countInput} output=${cfg.countOutput} cacheWrites=${cfg.countCacheWrites} cacheReads=${cfg.countCacheReads}`,
         `Project filter       : ${cfg.projectFilter}${cfg.projectFilter === 'currentWorkspace' ? ` (workspace: ${workspaceName ?? 'none'})` : ''}`,
         `30-day history       : ${historySummary(snapshot)}`,
+        `Chart render         : ${dashboard.chartReport}`,
         '',
         source === 'none'
           ? 'No Claude Code credential could be read. On macOS the keychain prompts the first time VS Code reads it - if that prompt was dismissed, quit VS Code, reopen, and choose Always Allow. Otherwise use Claude Usage: Paste Account Token.'

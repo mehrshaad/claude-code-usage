@@ -213,3 +213,5 @@ select.ctl { min-width: 108px; }
 @media (min-width: 380px) {
   .row { padding-top: 8px; padding-bottom: 8px; }
 }
+
+.no-match { padding: 10px 2px; }

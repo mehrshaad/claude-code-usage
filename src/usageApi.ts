@@ -1,5 +1,6 @@
 import { execFile } from 'child_process';
 import * as fs from 'fs';
+import * as https from 'https';
 import * as os from 'os';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -134,13 +135,40 @@ export class UsageApi {
     return this.token;
   }
 
-  private async request(token: string): Promise<Response> {
-    return fetch(ENDPOINT, {
-      headers: {
-        authorization: `Bearer ${token}`,
-        'anthropic-beta': 'oauth-2025-04-20',
-        accept: 'application/json'
-      }
+  /**
+   * Node's https module rather than global fetch. VS Code patches http/https
+   * for proxy support and certificate handling in the extension host; undici's
+   * fetch bypasses that patching, and reports every failure as a bare "fetch
+   * failed". On machines where curl and plain node reach this endpoint, the
+   * extension host still failed until this moved off fetch.
+   */
+  private request(token: string): Promise<{ status: number; statusText: string; body: string }> {
+    return new Promise((resolve, reject) => {
+      const req = https.request(
+        ENDPOINT,
+        {
+          method: 'GET',
+          headers: {
+            authorization: `Bearer ${token}`,
+            'anthropic-beta': 'oauth-2025-04-20',
+            accept: 'application/json',
+            'user-agent': 'claude-code-meter'
+          },
+          timeout: 15_000
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (c: Buffer) => chunks.push(c));
+          res.on('end', () => resolve({
+            status: res.statusCode ?? 0,
+            statusText: res.statusMessage ?? '',
+            body: Buffer.concat(chunks).toString('utf8')
+          }));
+        }
+      );
+      req.on('timeout', () => req.destroy(new Error('request timed out after 15s')));
+      req.on('error', reject);
+      req.end();
     });
   }
 
@@ -169,12 +197,12 @@ export class UsageApi {
         if (resolved) { response = await this.request(resolved.value); }
       }
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         this.fail(`usage endpoint returned ${response.status} ${response.statusText}`.trim(), now);
         return this.served(now);
       }
 
-      const report = normalize(await response.json() as Record<string, unknown>);
+      const report = normalize(JSON.parse(response.body) as Record<string, unknown>);
       this.good = { report, at: now };
       this.lastSuccessAt = now;
       this.lastError = undefined;
@@ -182,7 +210,7 @@ export class UsageApi {
       this.nextAttemptAt = 0;
       return report;
     } catch (err) {
-      this.fail(err instanceof Error ? err.message : String(err), now);
+      this.fail(describe(err), now);
       return this.served(now);
     }
   }
@@ -206,6 +234,21 @@ export class UsageApi {
     if (resets !== undefined && now >= resets) { return undefined; }
     return this.good.report;
   }
+}
+
+/**
+ * Node's fetch reports every transport failure as "fetch failed" and puts the
+ * real reason - DNS, TLS, refused connection, proxy - on err.cause.
+ */
+function describe(err: unknown): string {
+  if (!(err instanceof Error)) { return String(err); }
+  const cause = (err as { cause?: unknown }).cause;
+  if (cause instanceof Error) {
+    const code = (cause as { code?: string }).code;
+    return `${err.message}: ${code ? code + ' - ' : ''}${cause.message}`;
+  }
+  if (cause) { return `${err.message}: ${String(cause)}`; }
+  return err.message;
 }
 
 export let lastKeychainError: string | undefined;

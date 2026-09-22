@@ -149,7 +149,7 @@
   function colourControl(v) {
     return `<span class="swatches">${
       SWATCHES.map(([hex, name]) =>
-        `<button class="sw-chip${String(v).toLowerCase() === hex.toLowerCase() ? ' on' : ''}" style="background:${hex}" title="${name}" data-act="setValue" data-key="dashboard.accentColor" data-value="${hex}"></button>`
+        `<button class="sw-chip${String(v).toLowerCase() === hex.toLowerCase() ? ' on' : ''}" data-bg="${hex}" title="${name}" data-act="setValue" data-key="dashboard.accentColor" data-value="${hex}"></button>`
       ).join('')
     }<input class="ctl hexfield" type="text" value="${esc(v)}" maxlength="7" data-act="set" data-key="dashboard.accentColor"></span>`;
   }
@@ -159,7 +159,7 @@
     const chips = sorted.map((n, i) =>
       `<span class="chip">${n}%<button class="x" data-act="listRemove" data-key="notifications.thresholds" data-index="${i}"${ro}>✕</button></span>`
     ).join('');
-    const ticks = sorted.map((n) => `<i style="left:${Math.max(0, Math.min(100, n))}%"></i>`).join('');
+    const ticks = sorted.map((n) => `<i data-left="${Math.max(0, Math.min(100, n))}"></i>`).join('');
     return `<span class="listwrap">
       <span class="chips">${chips}<button class="add" data-act="listAdd" data-key="notifications.thresholds"${ro}>＋</button></span>
       ${sorted.length ? `<span class="scale">${ticks}</span>` : '<span class="hint">no alerts</span>'}
@@ -211,7 +211,7 @@
     const R = 13, C = 2 * Math.PI * R;
     return `<span class="gauges">
       <button class="gaugeopt${v === 'bar' ? ' on' : ''}" data-act="setValue" data-key="dashboard.gaugeStyle" data-value="bar">
-        <span class="mini-bar"><i style="width:${pct}%"></i></span><span class="styleid">bar</span>
+        <span class="mini-bar"><i data-w="${pct}"></i></span><span class="styleid">bar</span>
       </button>
       <button class="gaugeopt${v === 'ring' ? ' on' : ''}" data-act="setValue" data-key="dashboard.gaugeStyle" data-value="ring">
         <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="${R}" class="mini-track"></circle>
@@ -224,10 +224,10 @@
   function numberFontControl(v) {
     return `<span class="fonts">
       <button class="fontopt${v === 'editor' ? ' on' : ''}" data-act="setValue" data-key="dashboard.numberFont" data-value="editor">
-        <b style="font-family:var(--vscode-editor-font-family,monospace)">111.85M</b><span class="styleid">editor font</span>
+        <b data-ff="var(--vscode-editor-font-family,monospace)">111.85M</b><span class="styleid">editor font</span>
       </button>
       <button class="fontopt${v === 'ui' ? ' on' : ''}" data-act="setValue" data-key="dashboard.numberFont" data-value="ui">
-        <b style="font-family:var(--vscode-font-family)">111.85M</b><span class="styleid">UI font</span>
+        <b data-ff="var(--vscode-font-family)">111.85M</b><span class="styleid">UI font</span>
       </button>
     </span>`;
   }
@@ -283,7 +283,7 @@
       s.label.toLowerCase().includes(filter) || s.key.toLowerCase().includes(filter)
     );
     if (!hits.length) {
-      return `${filterRow()}<p class="empty" style="padding:10px 2px">No setting matches “${esc(state.filter)}”.</p>`;
+      return `${filterRow()}<p class="empty no-match">No setting matches “${esc(state.filter)}”.</p>`;
     }
     return `${filterRow()}<div class="rows">${hits.map((s) => `
       <div class="hit"><span class="hitsec">${esc((state.sections.find((x) => x.id === s.section) || {}).label || '')}</span>${row(s)}</div>

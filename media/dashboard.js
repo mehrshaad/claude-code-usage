@@ -17,6 +17,21 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const shortModel = (m) => m.replace(/^claude-/, '');
 
+  /**
+   * The webview CSP is `style-src <cspSource>` with no 'unsafe-inline', which
+   * drops every inline style attribute in markup. CSSOM writes are permitted,
+   * so anything positional travels as a data attribute and is applied here.
+   * Without this, bars fell back to their CSS floor and gauge fills to auto
+   * width - a flat history chart and meters that always read full.
+   */
+  function applyStyles(container) {
+    for (const el of container.querySelectorAll('[data-w]')) { el.style.width = el.dataset.w + '%'; }
+    for (const el of container.querySelectorAll('[data-h]')) { el.style.height = el.dataset.h + 'px'; }
+    for (const el of container.querySelectorAll('[data-left]')) { el.style.left = el.dataset.left + '%'; }
+    for (const el of container.querySelectorAll('[data-bg]')) { el.style.background = el.dataset.bg; }
+    for (const el of container.querySelectorAll('[data-ff]')) { el.style.fontFamily = el.dataset.ff; }
+  }
+
   function level(pct, state) {
     return pct >= state.danger ? 'danger' : pct >= state.warn ? 'warn' : '';
   }
@@ -74,8 +89,8 @@
         <span class="gauge-name">Session</span>
         <span class="hero num ${cls === 'danger' ? 'danger' : ''}">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
       </div>
-      ${has ? `<div class="track"><div class="fill ${cls}" style="width:${width}%"></div>${
-        caret != null ? `<div class="caret" style="left:${clamp(caret)}%" title="projected at current burn"></div>` : ''
+      ${has ? `<div class="track"><div class="fill ${cls}" data-w="${width}"></div>${
+        caret != null ? `<div class="caret" data-left="${clamp(caret)}" title="projected at current burn"></div>` : ''
       }</div>` : ''}
       <div class="gauge-sub">
         <span>${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span>
@@ -113,7 +128,7 @@
         <span class="gauge-name">Week</span>
         <span class="week-pct num">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted) + ' tok'}</span>
       </div>
-      ${has ? `<div class="track week"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
+      ${has ? `<div class="track week"><div class="fill ${cls}" data-w="${clamp(w.percent)}"></div></div>` : ''}
       <div class="gauge-sub">
         <span>${fmt(w.totals.counted)} tok${s.costEnabled ? ' · ' + cur + w.totals.cost.toFixed(2) : ''}</span>
         <span>${esc(parts.join(' · '))}</span>
@@ -142,7 +157,7 @@
         ${s.costEnabled ? `<td class="n cost">${money(m.totals.cost)}</td>` : ''}
         <td class="n msgs">${m.totals.messages}</td>
       </tr>
-      <tr><td class="share-cell" colspan="4"><div class="share" style="width:${(m.totals.counted / peak) * 100}%"></div></td></tr>`).join('');
+      <tr><td class="share-cell" colspan="4"><div class="share" data-w="${(m.totals.counted / peak) * 100}"></div></td></tr>`).join('');
     return `<section class="rule"><h2>By model</h2><table><tbody>${rows}</tbody></table></section>`;
   }
 
@@ -164,14 +179,25 @@
     // collapsed to its 1px floor and the chart read as an empty dashed line.
     // Pixels need nothing from the parent.
     const track = window.innerWidth >= 380 ? 46 : 34;
-    const bars = s.history.map((d, i) => {
-      const height = d.counted > 0 ? Math.max(2, Math.round((d.counted / peak) * track)) : 1;
-      return `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${height}px" title="${esc(d.date)} · ${fmt(d.counted)} tok"></span>`;
-    }).join('');
+    const heights = s.history.map((d) => (d.counted > 0 ? Math.max(2, Math.round((d.counted / peak) * track)) : 1));
+    const bars = s.history.map((d, i) =>
+      `<span class="${i === s.history.length - 1 ? 'today' : ''}" data-h="${heights[i]}" title="${esc(d.date)} · ${fmt(d.counted)} tok"></span>`
+    ).join('');
+    // Report what was computed and what the DOM ended up with, so a flat chart
+    // can be told apart from flat data without access to the panel.
+    setTimeout(() => {
+      const drawn = [...root.querySelectorAll('.spark span')].map((el) => el.offsetHeight);
+      const box = root.querySelector('.spark');
+      vscode.postMessage({
+        type: 'chart',
+        report: `peak=${Math.round(peak / 1e6)}M track=${track}px spark=${box ? box.offsetHeight : 'none'}px` +
+          ` computed=[${heights.slice(0, 8).join(',')}...] drawn=[${drawn.slice(0, 8).join(',')}...]`
+      });
+    }, 0);
     const hourly = s.historyMode === 'hour';
     const first = s.history[0];
     const last = s.history[s.history.length - 1];
-    return `<section class="rule"><h2>${hourly ? '24 hours' : '30 days'}</h2><div class="spark" style="height:${track}px">${bars}</div>
+    return `<section class="rule"><h2>${hourly ? '24 hours' : '30 days'}</h2><div class="spark" data-h="${track}">${bars}</div>
       <div class="axis"><span>${esc(first.label || first.date)}</span>${
         hourly ? '<span>now</span>' : `<span>${esc(last.label || last.date)}</span>`
       }</div></section>`;
@@ -204,7 +230,7 @@
   }
 
   function render(s) {
-    if (!s) { root.innerHTML = skeleton(); return; }
+    if (!s) { root.innerHTML = skeleton(); applyStyles(root); return; }
     if (!s.eventCount && !shown(s.block)) { root.innerHTML = noData(); return; }
 
     const cur = s.currencySymbol;
@@ -247,6 +273,8 @@
            </section>`
         : '');
 
+    applyStyles(root);
+
     for (const button of root.querySelectorAll('button[data-command]')) {
       button.addEventListener('click', () => {
         vscode.postMessage({ type: 'command', id: button.dataset.command });
@@ -277,7 +305,7 @@
         <span class="strip-name">Session</span>
         <span class="strip-pct num ${cls === 'danger' ? 'danger' : ''}">${has ? (w.estimated ? '~' : '') + Math.round(w.percent) + '%' : fmt(w.totals.counted)}</span>
       </div>
-      ${has ? `<div class="track"><div class="fill ${cls}" style="width:${clamp(w.percent)}%"></div></div>` : ''}
+      ${has ? `<div class="track"><div class="fill ${cls}" data-w="${clamp(w.percent)}"></div></div>` : ''}
       <div class="strip-sub"><span>${fmt(w.totals.counted)} tok</span><span>resets in ${dur(w.remainingMs)}</span></div>
     </div>`;
   }
@@ -285,6 +313,7 @@
   function paint(keepFocus) {
     if (view === 'settings') {
       root.innerHTML = strip(latest) + '<div class="surface">' + window.ccmSettings.render() + '</div>';
+      applyStyles(root);
       if (keepFocus === 'filter') {
         const field = root.querySelector('.filter');
         if (field) { field.focus(); field.setSelectionRange(field.value.length, field.value.length); }
