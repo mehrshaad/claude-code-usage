@@ -159,13 +159,19 @@
 
   function history(s) {
     const peak = Math.max(1, ...s.history.map((d) => d.counted));
-    const bars = s.history.map((d, i) =>
-      `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${clamp((d.counted / peak) * 100) || 1}%" title="${d.date} · ${fmt(d.counted)} tok"></span>`
-    ).join('');
+    // Heights in pixels, not percentages. A percentage height only resolves
+    // against a parent with a definite height; where that failed every bar
+    // collapsed to its 1px floor and the chart read as an empty dashed line.
+    // Pixels need nothing from the parent.
+    const track = window.innerWidth >= 380 ? 46 : 34;
+    const bars = s.history.map((d, i) => {
+      const height = d.counted > 0 ? Math.max(2, Math.round((d.counted / peak) * track)) : 1;
+      return `<span class="${i === s.history.length - 1 ? 'today' : ''}" style="height:${height}px" title="${esc(d.date)} · ${fmt(d.counted)} tok"></span>`;
+    }).join('');
     const hourly = s.historyMode === 'hour';
     const first = s.history[0];
     const last = s.history[s.history.length - 1];
-    return `<section class="rule"><h2>${hourly ? '24 hours' : '30 days'}</h2><div class="spark">${bars}</div>
+    return `<section class="rule"><h2>${hourly ? '24 hours' : '30 days'}</h2><div class="spark" style="height:${track}px">${bars}</div>
       <div class="axis"><span>${esc(first.label || first.date)}</span>${
         hourly ? '<span>now</span>' : `<span>${esc(last.label || last.date)}</span>`
       }</div></section>`;

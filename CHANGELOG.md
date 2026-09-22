@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1
+
+- The history chart drew every bar at its 1px floor, so a month of real usage read as an empty dashed line. The bars were sized with percentage heights, which only resolve against a parent with a definite height; where that did not hold, every bar collapsed. Heights are computed in pixels now, which needs nothing from the parent
+
 ## 0.11.0
 
 - The circle meter is drawn from this extension's own font. `○`, `◐` and `●` come from three different Unicode ranges, and Windows fonts render them at different sizes and advances, so the meter looked ragged there. Owning the glyphs makes every cell identical on every platform
