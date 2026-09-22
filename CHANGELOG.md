@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.2
+
+- Show Diagnostics reports the extension version and which panel script is actually running. An open panel keeps its loaded script until the window reloads, so a fixed build and a stale one looked identical from the outside
+
 ## 0.11.1
 
 - The history chart drew every bar at its 1px floor, so a month of real usage read as an empty dashed line. The bars were sized with percentage heights, which only resolve against a parent with a definite height; where that did not hold, every bar collapsed. Heights are computed in pixels now, which needs nothing from the parent

@@ -8,6 +8,8 @@ export class DashboardView implements vscode.WebviewViewProvider {
 
   private view: vscode.WebviewView | undefined;
   private settingsOpen = false;
+  /** Reported by the webview so a stale panel script is identifiable. */
+  public buildTag = 'not loaded';
   /** Set by the extension so webview actions can be executed with context. */
   public onAction: ((message: Record<string, unknown>) => void) | undefined;
   private latest: Snapshot | undefined;
@@ -23,6 +25,7 @@ export class DashboardView implements vscode.WebviewViewProvider {
     };
     view.webview.html = this.html(view.webview);
     view.webview.onDidReceiveMessage((msg) => {
+      if (msg?.type === 'build' && typeof msg.tag === 'string') { this.buildTag = msg.tag; return; }
       if (msg?.type === 'ready') {
         this.post();
         this.postSettings();

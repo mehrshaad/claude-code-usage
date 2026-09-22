@@ -242,7 +242,10 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('claudeUsage.diagnostics', async () => {
       const source = await api.source();
+      const version = vscode.extensions.getExtension('Mehrshad.claude-code-meter')?.packageJSON?.version ?? 'unknown';
       const lines = [
+        `Extension version    : ${version}`,
+        `Panel build          : ${dashboard.buildTag}`,
         `Transcript directory : ${resolveProjectsDir(cfg)}`,
         `Files scanned        : ${snapshot?.scannedFiles ?? 0}`,
         `Messages counted     : ${snapshot?.eventCount ?? 0}`,

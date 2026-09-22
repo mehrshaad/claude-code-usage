@@ -322,5 +322,8 @@
   });
 
   paint();
+  // Lets diagnostics tell a live panel script from one an un-reloaded window is
+  // still running, which otherwise looks identical from the outside.
+  vscode.postMessage({ type: 'build', tag: 'pixel-heights' });
   vscode.postMessage({ type: 'ready' });
 })();
