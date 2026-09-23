@@ -301,7 +301,8 @@ function windowOf(value: unknown): LimitWindow | undefined {
   const record = value as Record<string, unknown>;
   const raw = record.utilization;
   if (typeof raw !== 'number') { return undefined; }
-  const utilization = raw <= 1 ? raw * 100 : raw;
+  // The API reports percent (1.0 = 1%), never a 0–1 fraction.
+  const utilization = raw;
 
   const resets = record.resets_at;
   let resetsAt: number | undefined;

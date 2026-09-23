@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.1
+
+**A session at 1% read as 100%.** The limits endpoint reports utilization as a
+percentage (`1.0` means 1%), but the client guessed the scale and treated any
+value at or below 1 as a 0–1 fraction, multiplying it by 100. Low readings were
+inflated: 1% showed as 100%, 0.5% as 50%. Values are now taken as reported.
+
 ## 0.12.0
 
 Two root causes, both from using APIs the host does not support.
