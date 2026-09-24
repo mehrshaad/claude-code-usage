@@ -9,9 +9,11 @@
     return String(Math.round(n));
   };
   // Always NhNNm, so a countdown losing a digit never reflows the row.
+  // NdNNh from a day out, matching the status bar.
   const dur = (ms) => {
     const t = Math.max(0, Math.floor(ms / 60000));
     const h = Math.floor(t / 60);
+    if (h >= 24) { return Math.floor(h / 24) + 'd' + String(h % 24).padStart(2, '0') + 'h'; }
     return h > 0 ? h + 'h' + String(t % 60).padStart(2, '0') + 'm' : t + 'm';
   };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

@@ -39,11 +39,14 @@ export function formatTokens(n: number): string {
 /**
  * NhNNm while there is an hour to show, plain minutes below that. Dropping the
  * leading 0h costs two characters of width once an hour, which is a better
- * trade than reading "0h35m" for the rest of every window.
+ * trade than reading "0h35m" for the rest of every window. From a day out it
+ * is NdNNh: minutes are noise on a weekly reset, and "54h05m" makes the reader
+ * do the division.
  */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 60_000));
   const h = Math.floor(total / 60);
+  if (h >= 24) { return `${Math.floor(h / 24)}d${String(h % 24).padStart(2, '0')}h`; }
   return h > 0 ? `${h}h${String(total % 60).padStart(2, '0')}m` : `${total}m`;
 }
 

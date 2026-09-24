@@ -16,7 +16,7 @@ Reads the transcripts Claude Code already writes to `~/.claude/projects` and tur
 
 The item turns amber at the warning threshold and red at the danger threshold. Click it to open the dashboard, or set it to cycle between block / week / today / session.
 
-Width is fixed for every value — percentages reserve three digits and durations are always `NhNNm` — so nothing in the status bar cluster shifts as the numbers tick.
+Width is fixed for every value — percentages reserve three digits and durations are always `NhNNm` (`NdNNh` from a day out) — so nothing in the status bar cluster shifts as the numbers tick.
 
 Eight meter styles are available. The default, `halfblocks` (`██████▎░░░`), resolves to ~1.25% per cell and creeps rather than stepping. Block elements share a single advance width in every monospace font, so the meter never changes size as it fills.
 

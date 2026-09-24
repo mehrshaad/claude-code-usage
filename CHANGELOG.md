@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.2
+
+**Countdowns past a day read in days.** A weekly reset 54 hours out showed as
+`54h05m`, leaving the reader to do the division. From 24 hours the status bar,
+tooltip and dashboard show `NdNNh` (`2d06h`); below that nothing changes.
+
 ## 0.12.1
 
 **A session at 1% read as 100%.** The limits endpoint reports utilization as a
