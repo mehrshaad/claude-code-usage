@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.12.3
+
+**The account disconnected on networks with slow IPv4 and broken IPv6.**
+Percentages worked, then fell back to estimates for good, with every retry
+ending in `request timed out after 15s`. The endpoint has both an IPv4 and an
+IPv6 address. Node tries them in turn and gives each 250ms; where an IPv4
+connect takes longer than that and IPv6 is unroutable, it abandons IPv4 and
+waits on IPv6 until the request times out. Whether it worked depended on the
+network's latency at that moment. Each address now gets 2.5s.
+
 ## 0.12.2
 
 **Countdowns past a day read in days.** A weekly reset 54 hours out showed as

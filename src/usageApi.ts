@@ -154,8 +154,12 @@ export class UsageApi {
             accept: 'application/json',
             'user-agent': 'claude-code-meter'
           },
-          timeout: 15_000
-        },
+          timeout: 15_000,
+          // Node gives each address 250ms before trying the next. Where IPv4
+          // connects take longer than that and IPv6 is unroutable, it abandons
+          // IPv4 and hangs on IPv6 until the timeout above, on every retry.
+          autoSelectFamilyAttemptTimeout: 2_500
+        } as https.RequestOptions,
         (res) => {
           const chunks: Buffer[] = [];
           res.on('data', (c: Buffer) => chunks.push(c));

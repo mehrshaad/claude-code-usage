@@ -4,10 +4,12 @@ import { UsageApi } from '../src/usageApi';
 type Step = { kind: 'ok'; pct: number } | { kind: 'status'; code: number } | { kind: 'throw' };
 let script: Step[] = [];
 let calls = 0;
+let lastOpts: { autoSelectFamilyAttemptTimeout?: number } = {};
 
 // Stand in for https.request, which the client now uses.
 const https = require('https');
-https.request = (_url: unknown, _opts: unknown, cb: (res: unknown) => void) => {
+https.request = (_url: unknown, opts: typeof lastOpts, cb: (res: unknown) => void) => {
+  lastOpts = opts;
   const step = script[Math.min(calls++, script.length - 1)];
   const handlers: Record<string, (e?: unknown) => void> = {};
   const req = {
@@ -115,6 +117,13 @@ async function run(label: string, steps: Step[], expect: (string | number)[]) {
   const throttled = calls === before;
   if (throttled) { pass++; }
   console.log(`  ${throttled ? ' ok ' : 'FAIL'}  ${'backoff suppresses an immediate retry'.padEnd(44)} ${throttled ? 'suppressed' : 'hammered'}`);
+
+  // Node's 250ms default abandons a slow IPv4 connect for an unroutable IPv6 one.
+  total++;
+  const attempt = lastOpts.autoSelectFamilyAttemptTimeout ?? 250;
+  const patient = attempt >= 1000;
+  if (patient) { pass++; }
+  console.log(`  ${patient ? ' ok ' : 'FAIL'}  ${'slow IPv4 connect is not abandoned'.padEnd(44)} ${attempt}ms per address`);
 
   console.log(`\n${pass}/${total} resilience checks passed`);
 })();
